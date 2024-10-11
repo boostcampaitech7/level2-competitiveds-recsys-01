@@ -9,5 +9,5 @@ def clustering(total_df, info_df, feat_name, n_clusters=20):
     kmeans.fit(info)
     
     clusters = kmeans.predict(total_df[['longitude', 'latitude']].values)
-    total_df[feat_name] = pd.DataFrame(clusters, dtype=object)
+    total_df[feat_name] = pd.DataFrame(clusters, dtype='category')
     return total_df
