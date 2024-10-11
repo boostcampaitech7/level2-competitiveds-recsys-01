@@ -7,6 +7,7 @@ import preprocessing_fn
 
 import model
 from inference import *
+from utils.common_utils import submission_to_csv, mae_to_csv
 
 def main():
     print("Start the main.py successfully!")
@@ -18,8 +19,10 @@ def main():
     valid_data_preprocessed = preprocessing.time_feature_preprocessing(valid_data_)
     test_data_preprocessed = preprocessing.time_feature_preprocessing(test_data_)
 
+    train_data_feat, valid_data_feat, test_data_feat = preprocessing_fn.create_clustering_target(train_data_preprocessed, valid_data_preprocessed, test_data_preprocessed)
+
     # 정규화
-    train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing_fn.standardization(train_data_preprocessed, valid_data_preprocessed, test_data_preprocessed)
+    train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing_fn.standardization(train_data_feat, valid_data_feat, test_data_feat)
 
     # feature selection
     train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing_fn.feature_selection(train_data_scaled, valid_data_scaled, test_data_scaled)
@@ -32,6 +35,11 @@ def main():
     model_ = model.lightgbm(X_train, y_train)
 
     prediction, mae = inference(X_valid, y_valid, model_)
+
+    test_pred = model_.predict(X_test)
+    sample_submission = Directory.sample_submission
+    sample_submission['deposit'] = test_pred
+    submission_to_csv(sample_submission, 'feat_clustering')
     return prediction, mae
 
 
