@@ -2,8 +2,7 @@ from utils.constant_utils import Directory
 from utils import common_utils
 import preprocessing
 import preprocessing_fn
-
-
+import features
 
 import model
 from inference import *
@@ -11,7 +10,19 @@ from inference import *
 def main():
     print("Start the main.py successfully!")
     df = common_utils.merge_data(Directory.train_data, Directory.test_data)
+    
+    # 클러스터 피처 apply
+    for info_df_name in ['subway_info', 'school_info', 'park_info']:
+        info_df = getattr(Directory, info_df_name)  
+        df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=15)
+
+    # 이상치 처리
+    df = preprocessing_fn.handle_outliers(df)
+
     train_data_, valid_data_, test_data_ = common_utils.train_valid_test_split(df)
+    # 결측치 제거
+    train_data_ = preprocessing_fn.handle_duplicates(train_data_)
+    valid_data_ = preprocessing_fn.handle_duplicates(valid_data_)
 
     # 전처리 적용
     train_data_preprocessed = preprocessing.time_feature_preprocessing(train_data_)
@@ -31,11 +42,20 @@ def main():
     print("Train the model")
     model_ = model.lightgbm(X_train, y_train)
 
-    prediction, mae = inference(X_valid, y_valid, model_)
+    prediction, mae = inference(model_, 'validation', X_valid, y_valid)
+
+    # train with total dataset
+    print("Train with total dataset")
+    X_total, y_total = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
+    model_ = model.lightgbm(X_total, y_total)
+    
+    # inference with test data
+    submission = inference(model_, 'submission', X_test)
+
+    # save sample submission
+    common_utils.submission_to_csv(submission, 'clustering+timefeature+cluster15')
+
     return prediction, mae
-
-
-
 
 if __name__ == "__main__":
     prediction, mae = main()
