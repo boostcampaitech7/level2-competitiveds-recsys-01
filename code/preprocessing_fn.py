@@ -52,10 +52,14 @@ def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.Dat
 
 
 def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    features_to_scale = [col for col in train_data.columns if col not in ['type', 'date', 'season', 'deposit']]
+    exclude_cols = ['type', 'date', 'season', 'deposit']
+
+
+    features_to_scale = [col for col in train_data.columns 
+                     if col not in exclude_cols and train_data[col].dtype in ['int64', 'float64']]
+
 
     scaler = StandardScaler()
-
     train_data_scaled = train_data.copy()
     train_data_scaled[features_to_scale] = scaler.fit_transform(train_data[features_to_scale])
 
@@ -73,7 +77,7 @@ def handle_outliers(total_df):
     weight = 1.5
 
     Q1 = 0
-    Q3 = np.percentile(deposit.values, 90)
+    Q3 = np.percentile(deposit.values, 75)
 
     iqr = Q3 - Q1
     iqr_weight = iqr * weight
