@@ -39,11 +39,16 @@ def main():
     valid_data_ = preprocessing.time_feature_preprocessing(valid_data_)
     test_data_ = preprocessing.time_feature_preprocessing(test_data_)
 
+    # 새로운 피처 추가
+    train_data_, valid_data_, test_data_ = features.create_nearest_subway_distance(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = features.create_subway_within_radius(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = features.create_nearest_park_distance_and_area(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = features.create_school_within_radius(train_data_, valid_data_, test_data_)
+
     # 계약일 피처 제거
     train_data_ = preprocessing_fn.drop_columns(train_data_, ['contract_day'])
     valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_day'])
     test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_day'])
-
     # 정규화
     train_data_, valid_data_, test_data_ = preprocessing_fn.standardization(train_data_, valid_data_, test_data_)
 
@@ -70,7 +75,7 @@ def main():
     submission = inference(model_, 'submission', X_test)
 
     # save sample submission
-    common_utils.submission_to_csv(submission, 'cluster,timefeature,categorical,drop,gangnam,xgb1000')
+    common_utils.submission_to_csv(submission, 'cluster,timefeature,school_subway_park_feature,categorical,drop,gangnam,xgb1000')
 
     return prediction, mae
 

@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.cluster import KMeans
+
+from utils.constant_utils import Config
 
 
 def create_temporal_feature(df: pd.DataFrame)-> pd.DataFrame:
@@ -102,6 +105,7 @@ def handle_outliers(total_df):
 def handle_duplicates(df):
     df.drop_duplicates(subset=['area_m2', 'contract_year_month', 'contract_day', 'contract_type', 'floor', 'latitude', 'longitude', 'age', 'deposit'], inplace = True)
     return df
+
 
 def log_transform(df, column):
     df.loc[df[column] > 0, column] = np.log(df[column][df[column] > 0]).astype(float)
