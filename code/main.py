@@ -31,6 +31,7 @@ def main():
     train_data_ = preprocessing_fn.handle_duplicates(train_data_)
     valid_data_ = preprocessing_fn.handle_duplicates(valid_data_)
 
+
     # 전처리 적용
     train_data_ = preprocessing.time_feature_preprocessing(train_data_)
     valid_data_ = preprocessing.time_feature_preprocessing(valid_data_)
@@ -54,7 +55,8 @@ def main():
 
     # train with total dataset
     print("Train with total dataset")
-    X_total, y_total = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
+    X_total = common_utils.train_valid_concat(X_train, X_valid)
+    y_total = common_utils.train_valid_concat(y_train, y_valid)
     model_ = model.xgboost(X_total, y_total)
     
     # inference with test data

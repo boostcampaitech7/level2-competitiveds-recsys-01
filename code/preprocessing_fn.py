@@ -111,3 +111,4 @@ def log_transform(df, column):
 def numeric_to_categoric(df, column, map_dict):
     df[column] = df[column].map(map_dict).astype('category')
     return df
+    

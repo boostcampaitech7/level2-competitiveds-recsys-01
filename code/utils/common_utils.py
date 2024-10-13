@@ -30,10 +30,9 @@ def train_valid_test_split(df):
 
     return train_data, valid_data, test_data
 
-def train_valid_concat(X_train, X_valid, y_train, y_valid):
-    X_total, y_total = pd.concat([X_train, X_valid]), pd.concat([y_train, y_valid])
-    return X_total, y_total
-
+def train_valid_concat(train, valid):
+    total = pd.concat([train, valid])
+    return total
 def split_feature_target(train_data_scaled, valid_data_scaled, test_data_scaled):
     X_train = train_data_scaled.drop(columns=['deposit'])
     y_train = train_data_scaled['deposit']
