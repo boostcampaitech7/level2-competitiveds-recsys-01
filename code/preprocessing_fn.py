@@ -102,3 +102,12 @@ def handle_outliers(total_df):
 def handle_duplicates(df):
     df.drop_duplicates(subset=['area_m2', 'contract_year_month', 'contract_day', 'contract_type', 'floor', 'latitude', 'longitude', 'age', 'deposit'], inplace = True)
     return df
+
+def log_transform(df, column):
+    df.loc[df[column] > 0, column] = np.log(df[column][df[column] > 0]).astype(float)
+    df.loc[df[column] < 0, column] = -np.log(abs(df[column][df[column] < 0])).astype(float)
+    return df
+
+def numeric_to_categoric(df, column, map_dict):
+    df[column] = df[column].map(map_dict).astype('category')
+    return df

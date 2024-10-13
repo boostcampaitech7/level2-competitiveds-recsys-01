@@ -14,10 +14,16 @@ def main():
     # 클러스터 피처 apply
     for info_df_name in ['subway_info', 'school_info', 'park_info']:
         info_df = getattr(Directory, info_df_name)  
-        df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=15)
+        df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=20)
 
     # 이상치 처리
     df = preprocessing_fn.handle_outliers(df)
+    
+    # 로그 변환
+    #df = preprocessing_fn.log_transform(df, 'floor')
+
+    # 계약 유형 피처 카테고리 변환
+    df = preprocessing_fn.numeric_to_categoric(df, 'contract_type', {0:'new', 1:'renew', 2:'unknown'})
 
     train_data_, valid_data_, test_data_ = common_utils.train_valid_test_split(df)
 
@@ -44,6 +50,7 @@ def main():
     model_ = model.xgboost(X_train, y_train)
 
     prediction, mae = inference(model_, 'validation', X_valid, y_valid)
+    print(mae)
 
     # train with total dataset
     print("Train with total dataset")
@@ -54,10 +61,9 @@ def main():
     submission = inference(model_, 'submission', X_test)
 
     # save sample submission
-    common_utils.submission_to_csv(submission, 'cluster,timefeature,xgboost(1000)')
+    common_utils.submission_to_csv(submission, 'cluster,timefeature,categorical,xgboost(1000)')
 
     return prediction, mae
 
 if __name__ == "__main__":
     prediction, mae = main()
-    print(mae)
