@@ -9,6 +9,14 @@ from inference import *
 
 def main():
     print("Start the main.py successfully!")
+
+    '''
+    name : 실험자 이름입니다.
+    title : result 폴더에 저장될 실험명을 지정합니다.
+    '''
+    name = 'eun'
+    title = 'cluster,timefeature,categorical,drop,gangnam,xgb1000'
+
     df = common_utils.merge_data(Directory.train_data, Directory.test_data)
 
     # 클러스터 피처 apply
@@ -60,6 +68,10 @@ def main():
     prediction, mae = inference(model_, 'validation', X_valid, y_valid)
     print(mae)
 
+    # record MAE score as csv
+    hyperparams = "learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED"
+    common_utils.mae_to_csv(name, title, hyperparams=hyperparams, mae = mae)
+
     # train with total dataset
     print("Train with total dataset")
     X_total = common_utils.train_valid_concat(X_train, X_valid)
@@ -70,7 +82,7 @@ def main():
     submission = inference(model_, 'submission', X_test)
 
     # save sample submission
-    common_utils.submission_to_csv(submission, 'cluster,timefeature,categorical,drop,gangnam,xgb1000')
+    common_utils.submission_to_csv(submission, name)
 
     return prediction, mae
 
