@@ -5,9 +5,13 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 from utils.constant_utils import Directory
 
-def inference(X, y, model):
+def inference(model, type, X, y=None):
+    if type=='validation':
+        prediction = model.predict(X)
+        mae = mean_absolute_error(y, prediction)
+        return prediction, mae
     prediction = model.predict(X)
-    mae = mean_absolute_error(y, prediction)
+    sample_submission = Directory.sample_submission
+    sample_submission['deposit'] = prediction
 
-    return prediction, mae
-
+    return sample_submission
