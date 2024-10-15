@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler, MinMaxScaler
 
 
 def create_temporal_feature(df: pd.DataFrame)-> pd.DataFrame:
@@ -49,16 +49,21 @@ def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.Dat
     return train_data_scaled, valid_data_scaled, test_data_scaled
 
 
-
-def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+# 수치형 변수 standardization 함수
+def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame, scaling_type: str = 'standard') -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     exclude_cols = ['type', 'date', 'season', 'deposit']
 
-
+    # 스케일링할 수치형 변수 선택
     features_to_scale = [col for col in train_data.columns 
-                     if col not in exclude_cols and train_data[col].dtype in ['int64', 'float64']]
+                         if col not in exclude_cols and train_data[col].dtype in ['int64', 'float64']]
 
+    # scaling_type에 따라 다른 scaler 적용
+    if scaling_type == 'minmax':
+        scaler = MinMaxScaler()
+    else:
+        scaler = StandardScaler()
 
-    scaler = StandardScaler()
+    # train, valid, test 데이터를 복사하여 스케일링 적용
     train_data_scaled = train_data.copy()
     train_data_scaled[features_to_scale] = scaler.fit_transform(train_data[features_to_scale])
 
@@ -69,6 +74,25 @@ def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_dat
     test_data_scaled[features_to_scale] = scaler.transform(test_data[features_to_scale])
 
     return train_data_scaled, valid_data_scaled, test_data_scaled
+
+
+# 범주형 변수 One-Hot Encoding 함수
+def one_hot_encode(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    # 범주형 변수만 선택
+    categorical_cols = train_data.select_dtypes(include=['object', 'category']).columns.tolist()
+
+    # 범주형 변수에 대해 One-Hot Encoding 적용
+    train_data_encoded = pd.get_dummies(train_data, columns=categorical_cols, drop_first=True)
+    valid_data_encoded = pd.get_dummies(valid_data, columns=categorical_cols, drop_first=True)
+    test_data_encoded = pd.get_dummies(test_data, columns=categorical_cols, drop_first=True)
+
+    # train, valid, test 데이터 간의 column mismatch 해결 (같은 칼럼으로 맞추기 위해 reindex 사용)
+    valid_data_encoded = valid_data_encoded.reindex(columns=train_data_encoded.columns, fill_value=0)
+    test_data_encoded = test_data_encoded.reindex(columns=train_data_encoded.columns, fill_value=0)
+
+    return train_data_encoded, valid_data_encoded, test_data_encoded
+
+
 
 def handle_outliers(total_df):
     new_df = total_df.copy()

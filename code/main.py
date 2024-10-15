@@ -41,9 +41,8 @@ def main():
     train_data_, valid_data_, test_data_ = features.create_school_within_radius(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.create_place_within_radius(train_data_, valid_data_, test_data_)
 
-
     # 정규화
-    train_data_, valid_data_, test_data_ = preprocessing_fn.standardization(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = preprocessing_fn.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')
 
     # feature selection
     train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing_fn.feature_selection(train_data_, valid_data_, test_data_)

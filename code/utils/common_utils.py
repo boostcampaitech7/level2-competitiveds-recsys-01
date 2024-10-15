@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import time
+import numpy as np
 
 from utils.constant_utils import Directory
 
@@ -17,7 +18,7 @@ def merge_data(train_data, test_data):
     return df
 
 
-def train_valid_test_split(df):
+def train_valid_test_split(df, log_transform: str = None):
     # 데이터 분할
     train_data = df[df['type'] == 'train']
     test_data = df[df['type'] == 'test']
@@ -27,6 +28,11 @@ def train_valid_test_split(df):
 
     valid_data = train_data[(train_data['contract_year_month'] >= valid_start) & (train_data['contract_year_month'] <= valid_end)]
     train_data = train_data[~((train_data['contract_year_month'] >= valid_start) & (train_data['contract_year_month'] <= valid_end))]
+
+    # log 변환
+    if log_transform == 'log':
+        train_data['deposit'] = np.log1p(train_data['deposit'])
+        valid_data['deposit'] = np.log1p(valid_data['deposit'])
 
     return train_data, valid_data, test_data
 
