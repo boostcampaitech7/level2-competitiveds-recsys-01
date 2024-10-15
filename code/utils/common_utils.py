@@ -13,6 +13,10 @@ def merge_data(train_data, test_data):
     df.drop(['index'], axis = 1, inplace = True)
 
     interest_rate = Directory.interest_rate.rename(columns = {'year_month' : 'contract_year_month'})
+
+    # 202406 데이터 202405 값으로 추가
+    interest_rate.loc[len(interest_rate)] = [202406, 3.56]
+    interest_rate['contract_year_month'] = interest_rate['contract_year_month'].astype(int)
     df = df.merge(interest_rate, on='contract_year_month', how='left')
     return df
 
