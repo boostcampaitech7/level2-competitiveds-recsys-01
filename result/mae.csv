@@ -1,0 +1,2 @@
+﻿name,title,hyperparams,MAE score
+eun,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4519.541620020683

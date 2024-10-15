@@ -4,7 +4,6 @@ import time
 
 from utils.constant_utils import Directory
 
-
 def merge_data(train_data, test_data):
     train_data['type'] = 'train'
     test_data['type'] = 'test'
@@ -52,11 +51,21 @@ def submission_to_csv(submit_df, file_name):
     submission_file_path = os.path.join(submission_path, file_name)
     submit_df.to_csv(submission_file_path, index=False, encoding='utf-8-sig')
 
+'''
+name : 실험 진행자
+title : 실험 구성요소 (모델명, 피처들)
+hyperparams : 하이퍼파라미터 구성
+MAE score : MAE score
+'''
+def mae_to_csv(name, title, hyperparams, mae):
+    mae_path = os.path.join(Directory.result_path, "mae.csv")
+    new_dict = {"name":[name], "title": [title], "hyperparams":[hyperparams], "MAE score":[mae]}
 
-def mae_to_csv(mae_df, file_name):
-    mae_path = os.path.join(Directory.result_path, "mae")
-    os.makedirs(mae_path, exist_ok=True)
+    if not os.path.exists(mae_path):
+        mae_df = pd.DataFrame(new_dict)
 
-    file_name += '_' + time.strftime('%x', time.localtime())[:5].replace('/','') + '.csv'
-    mae_file_path = os.path.join(mae_path, file_name)
-    mae_df.to_csv(mae_file_path, index=False, encoding='utf-8-sig')
+    else:
+        mae_df = pd.read_csv(mae_path)
+        mae_df = pd.concat([mae_df, pd.DataFrame(new_dict)], axis=0)    
+
+    mae_df.to_csv(mae_path, index=False, encoding='utf-8-sig')
