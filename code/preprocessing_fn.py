@@ -1,7 +1,9 @@
 import os
 import pandas as pd
 import numpy as np
+from scipy import stats
 
+from sklearn.preprocessing import PowerTransformer
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 
@@ -14,7 +16,7 @@ def create_temporal_feature(df: pd.DataFrame)-> pd.DataFrame:
 
     # 기본 특성 생성 (모든 데이터셋에 동일하게 적용 가능)
     df_preprocessed['day_of_week'] = df_preprocessed['date'].dt.dayofweek
-    #df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
+    df_preprocessed['is_weekend'] = df_preprocessed['day_of_week'].isin([5, 6]).astype(int)
     df_preprocessed['quarter'] = df_preprocessed['date'].dt.quarter
     df_preprocessed['is_month_end'] = (df_preprocessed['date'].dt.is_month_end).astype(int)
     df_preprocessed['season'] = df_preprocessed['month'].map({1: 'Winter', 2: 'Winter', 3: 'Spring', 4: 'Spring', 
@@ -42,21 +44,32 @@ def create_floor_area_interaction(df: pd.DataFrame)-> pd.DataFrame:
 
 
 
-def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.DataFrame, test_data_scaled: pd.DataFrame)-> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+# def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.DataFrame, test_data_scaled: pd.DataFrame)-> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+#     drop_columns = ['type', 'season', 'date']
+#     train_data_scaled.drop(drop_columns, axis = 1, inplace = True)
+#     valid_data_scaled.drop(drop_columns, axis = 1, inplace = True)
+#     test_data_scaled.drop(drop_columns + ['deposit'], axis = 1, inplace = True)
+
+#     return train_data_scaled, valid_data_scaled, test_data_scaled
+
+def feature_selection(train_data_scaled, valid_data_scaled, test_data_scaled):
     drop_columns = ['type', 'season', 'date']
+    #drop_columns = ['type', 'season', 'date'] + ['contract_type','built_year','year','month','quarter']
     train_data_scaled.drop(drop_columns, axis = 1, inplace = True)
     valid_data_scaled.drop(drop_columns, axis = 1, inplace = True)
     test_data_scaled.drop(drop_columns + ['deposit'], axis = 1, inplace = True)
-
     return train_data_scaled, valid_data_scaled, test_data_scaled
 
 
-
 def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    features_to_scale = [col for col in train_data.columns if col not in ['type', 'date', 'season', 'deposit']]
+    exclude_cols = ['type', 'date', 'season', 'deposit']
+
+
+    features_to_scale = [col for col in train_data.columns 
+                     if col not in exclude_cols and train_data[col].dtype in ['int64', 'float64']]
+
 
     scaler = StandardScaler()
-
     train_data_scaled = train_data.copy()
     train_data_scaled[features_to_scale] = scaler.fit_transform(train_data[features_to_scale])
 
@@ -67,3 +80,75 @@ def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_dat
     test_data_scaled[features_to_scale] = scaler.transform(test_data[features_to_scale])
 
     return train_data_scaled, valid_data_scaled, test_data_scaled
+
+
+def target_log_transform(y_train):
+    y_train_transformed = np.log1p(y_train)
+
+    return y_train_transformed
+
+def target_log_re_transform(prediction):   
+    y_pred = np.expm1(prediction)
+
+    return y_pred
+
+
+# 방법 2: sklearn의 PowerTransformer 사용 (Box-Cox 방법)
+def boxcox_transform(y_train):
+    # PowerTransformer 초기화 (Box-Cox 방법 사용)
+    pt = PowerTransformer(method='box-cox')
+    
+    # 훈련 데이터로 변환기 학습 및 변환
+    y_train_transformed = pt.fit_transform(np.array(y_train).reshape(-1, 1)).flatten()
+    
+    return y_train_transformed, pt
+
+def boxcox_re_transform(prediction, pt):
+    y_train_pred = pt.inverse_transform(prediction.reshape(-1, 1)).flatten()
+
+    return y_train_pred
+
+# def target_yeo_johnson(data):
+#     pt = PowerTransformer(method='yeo-johnson')
+#     y_transformed = pt.fit_transform(np.array(data['deposit']).reshape(-1, 1))
+
+#     data['transformed_deposit'] = y_transformed
+    
+#     data.drop(['deposit'], axis = 1, inplace = True)
+#     data.rename(columns = {'transformed_deposit' : 'deposit'}, inplace = True)
+
+#     return pt, data
+
+
+def handle_outliers(total_df):
+    new_df = total_df.copy()
+    deposit = total_df['deposit']
+    weight = 1.5
+
+    Q1 = 0
+    Q3 = np.percentile(deposit.values, 75)
+
+    iqr = Q3 - Q1
+    iqr_weight = iqr * weight
+
+    lowest_val = Q1 - iqr_weight
+    # 최솟값
+    highest_val = Q3 + iqr_weight
+    # 최댓값
+
+    low_outlier_index = deposit[(deposit < lowest_val)].index
+    high_outlier_index = deposit[(deposit > highest_val)].index
+
+    # 최솟값보다 작고, 최댓값보다 큰 이상치 데이터들의 인덱스
+    new_df.loc[low_outlier_index,'deposit'] = lowest_val
+    new_df.loc[high_outlier_index,'deposit'] = highest_val
+
+    # 전체 데이터에서 이상치 데이터 제거
+    new_df.reset_index(drop = True, inplace = True)
+
+    return new_df
+
+def handle_duplicates(df):
+    df.drop_duplicates(subset=['area_m2', 'contract_year_month', 'contract_day', 'contract_type', 'floor', 'latitude', 'longitude', 'age', 'deposit'], inplace = True)
+    return df
+
