@@ -82,7 +82,7 @@ def main():
     submission = inference(model_, 'submission', X_test)
 
     # save sample submission
-    common_utils.submission_to_csv(submission, name)
+    common_utils.submission_to_csv(submission, title)
 
     return prediction, mae
 
