@@ -7,6 +7,47 @@ from sklearn.cluster import KMeans
 
 from utils.constant_utils import Config
 
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler, MinMaxScaler
+
+
+# contract_year_month로 생성한 파생변수 함수
+def create_temporal_feature(df: pd.DataFrame)-> pd.DataFrame:
+    df_preprocessed = df.copy()
+    
+    df_preprocessed['year'] = df_preprocessed['contract_year_month'].astype(str).str[:4].astype(int)
+    df_preprocessed['month'] = df_preprocessed['contract_year_month'].astype(str).str[4:].astype(int)
+    df_preprocessed['date'] = pd.to_datetime(df_preprocessed['year'].astype(str) + df_preprocessed['month'].astype(str).str.zfill(2) + df_preprocessed['contract_day'].astype(str).str.zfill(2))
+
+    # 기본 특성 생성 (모든 데이터셋에 동일하게 적용 가능)
+    df_preprocessed['day_of_week'] = df_preprocessed['date'].dt.dayofweek
+    #df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
+    df_preprocessed['quarter'] = df_preprocessed['date'].dt.quarter
+    df_preprocessed['is_month_end'] = (df_preprocessed['date'].dt.is_month_end).astype(int)
+    df_preprocessed['season'] = df_preprocessed['month'].map({1: 'Winter', 2: 'Winter', 3: 'Spring', 4: 'Spring', 
+                                    5: 'Spring', 6: 'Summer', 7: 'Summer', 8: 'Summer', 
+                                    9: 'Fall', 10: 'Fall', 11: 'Fall', 12: 'Winter'})
+    return df_preprocessed
+
+
+# season에 대한 sin, cos 계산 함수
+def create_sin_cos_season(df: pd.DataFrame)-> pd.DataFrame:
+    df_preprocessed = df.copy()
+    # Cyclical encoding for seasons
+    season_dict = {'Spring': 0, 'Summer': 1, 'Fall': 2, 'Winter': 3}
+    df_preprocessed['season_numeric'] = df_preprocessed['season'].map(season_dict)
+    df_preprocessed['season_sin'] = np.sin(2 * np.pi * df_preprocessed['season_numeric'] / 4)
+    df_preprocessed['season_cos'] = np.cos(2 * np.pi * df_preprocessed['season_numeric'] / 4)
+
+    df_preprocessed = df_preprocessed.drop(['season_numeric'], axis=1)
+    return df_preprocessed
+
+
+# 층수와 면적 관계 함수
+def create_floor_area_interaction(df: pd.DataFrame)-> pd.DataFrame:
+    df_preprocessed = df.copy()
+
+    df_preprocessed['floor_area_interaction'] = df_preprocessed['floor'] * df_preprocessed['area_m2']
+    return df_preprocessed
 
 
 def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.DataFrame, test_data_scaled: pd.DataFrame)-> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -18,15 +59,23 @@ def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.Dat
     return train_data_scaled, valid_data_scaled, test_data_scaled
 
 
-def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+### 변수 유형별 변환
+
+# 수치형 변수 standardization 함수
+def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame, scaling_type: str = 'standard') -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     exclude_cols = ['type', 'date', 'season', 'deposit']
 
-
+    # 스케일링할 수치형 변수 선택
     features_to_scale = [col for col in train_data.columns 
-                     if col not in exclude_cols and train_data[col].dtype in ['int64', 'float64']]
+                         if col not in exclude_cols and train_data[col].dtype in ['int64', 'float64']]
 
+    # scaling_type에 따라 다른 scaler 적용
+    if scaling_type == 'minmax':
+        scaler = MinMaxScaler()
+    else:
+        scaler = StandardScaler()
 
-    scaler = StandardScaler()
+    # train, valid, test 데이터를 복사하여 스케일링 적용
     train_data_scaled = train_data.copy()
     train_data_scaled[features_to_scale] = scaler.fit_transform(train_data[features_to_scale])
 
@@ -134,3 +183,19 @@ def handle_outliers(df):
     total_df = pd.concat([filtered_train_df, test_df], axis = 0)
     
     return total_df
+
+# 범주형 변수 One-Hot Encoding 함수
+def one_hot_encode(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    # 범주형 변수만 선택
+    categorical_cols = train_data.select_dtypes(include=['object', 'category']).columns.tolist()
+
+    # 범주형 변수에 대해 One-Hot Encoding 적용
+    train_data_encoded = pd.get_dummies(train_data, columns=categorical_cols, drop_first=True)
+    valid_data_encoded = pd.get_dummies(valid_data, columns=categorical_cols, drop_first=True)
+    test_data_encoded = pd.get_dummies(test_data, columns=categorical_cols, drop_first=True)
+
+    # train, valid, test 데이터 간의 column mismatch 해결 (같은 칼럼으로 맞추기 위해 reindex 사용)
+    valid_data_encoded = valid_data_encoded.reindex(columns=train_data_encoded.columns, fill_value=0)
+    test_data_encoded = test_data_encoded.reindex(columns=train_data_encoded.columns, fill_value=0)
+
+    return train_data_encoded, valid_data_encoded, test_data_encoded

@@ -3,6 +3,10 @@ from utils import common_utils
 import preprocessing
 import features
 
+import preprocessing_fn
+import features
+
+
 import model
 from inference import *
 
@@ -24,7 +28,9 @@ def main():
         df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=20)
 
     # 이상치 처리
-    df = preprocessing.handle_outliers(df)
+    print("start to cleaning outliers...")
+    df = preprocessing_fn.handle_outliers(df)
+    df = df[df['age'] >= 0]
 
     # 강남역과의 거리 반영
     df = features.distance_gangnam(df)
@@ -38,6 +44,7 @@ def main():
     train_data_, valid_data_, test_data_ = common_utils.train_valid_test_split(df)
 
     # 중복 제거
+    print("start to preprocessing...")
     train_data_ = preprocessing.handle_duplicates(train_data_)
     valid_data_ = preprocessing.handle_duplicates(valid_data_)
 
@@ -47,6 +54,7 @@ def main():
     test_data_ = features.create_floor_area_interaction(test_data_)
 
     # 새로운 피처 추가
+    print("start to feature engineering...")
     train_data, valid_data, test_data = features.create_clustering_target(train_data, valid_data, test_data)
     train_data, valid_data, test_data = features.create_nearest_subway_distance(train_data, valid_data, test_data)
     train_data, valid_data, test_data = features.create_subway_within_radius(train_data, valid_data, test_data)
@@ -54,13 +62,17 @@ def main():
     train_data, valid_data, test_data = features.create_school_within_radius(train_data, valid_data, test_data)
     train_data, valid_data, test_data = features.create_sum_park_area_within_radius(train_data, valid_data, test_data)
     train_data, valid_data, test_data = features.create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
+    
+    # categorization 함수
+    # train_data_, valid_data_, test_data_ = features.categorization(train_data_, valid_data_, test_data_, category = 'age')
+    # train_data_, valid_data_, test_data_ = features.categorization(train_data_, valid_data_, test_data_ , category = 'floor')
 
     # 계약일 피처 제거
     train_data_ = preprocessing_fn.drop_columns(train_data_, ['contract_day'])
     valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_day'])
     test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_day'])
     # 정규화
-    train_data_, valid_data_, test_data_ = preprocessing.standardization(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = preprocessing.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')
 
     # feature selection
     train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing.feature_selection(train_data_, valid_data_, test_data_)
