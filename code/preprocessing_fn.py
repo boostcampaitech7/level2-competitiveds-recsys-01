@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, PowerTransformer
 from sklearn.cluster import KMeans
 
 from utils.constant_utils import Config
@@ -105,16 +105,16 @@ def boxcox_re_transform(prediction, pt):
 
     return y_train_pred
 
-# def target_yeo_johnson(data):
-#     pt = PowerTransformer(method='yeo-johnson')
-#     y_transformed = pt.fit_transform(np.array(data['deposit']).reshape(-1, 1))
+def target_yeo_johnson(data):
+    pt = PowerTransformer(method='yeo-johnson')
+    y_transformed = pt.fit_transform(np.array(data['deposit']).reshape(-1, 1))
 
-#     data['transformed_deposit'] = y_transformed
+    data['transformed_deposit'] = y_transformed
     
-#     data.drop(['deposit'], axis = 1, inplace = True)
-#     data.rename(columns = {'transformed_deposit' : 'deposit'}, inplace = True)
+    data.drop(['deposit'], axis = 1, inplace = True)
+    data.rename(columns = {'transformed_deposit' : 'deposit'}, inplace = True)
 
-#     return pt, data
+    return pt, data
 
 
 def handle_outliers(df):
