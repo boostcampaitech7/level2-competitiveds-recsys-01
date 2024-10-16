@@ -20,7 +20,8 @@ def main():
     # 이상치 처리
     print("start to cleaning outliers...")
     df = preprocessing_fn.handle_outliers(df)
-
+    df = df[df['age'] >= 0]
+    
     train_data_, valid_data_, test_data_ = common_utils.train_valid_test_split(df)
 
     # 중복 제거
@@ -38,6 +39,8 @@ def main():
     train_data_, valid_data_, test_data_ = features.create_nearest_subway_distance(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.create_subway_within_radius(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.create_nearest_park_distance_and_area(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = features.create_clustering_target(train_data_, valid_data_, test_data_)
+    
     train_data_, valid_data_, test_data_ = features.create_school_within_radius(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.create_place_within_radius(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.categorization(train_data_, valid_data_, test_data_, category = 'age')

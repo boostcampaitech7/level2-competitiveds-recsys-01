@@ -5,7 +5,10 @@ class Config:
     RANDOM_SEED = 42
     CATEGORICAL_COLUMNS = ['contract_type']
     NUMERICAL_COLUMNS = ['area_m2','contract_year_month','contract_day','floor','built_year','latitude','longitude','age','deposit']
-
+    SPLIT_YEAR_START = 202307
+    SPLIT_YEAR_END = 202312
+    
+    
 class Directory:
     root_path = "/data/ephemeral/home/"
     train_data = pd.read_csv(os.path.join(root_path, 'data/train.csv'))

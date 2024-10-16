@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler, MinMaxScaler
 
 
+# contract_year_month로 생성한 파생변수 함수
 def create_temporal_feature(df: pd.DataFrame)-> pd.DataFrame:
     df_preprocessed = df.copy()
     
@@ -22,6 +23,8 @@ def create_temporal_feature(df: pd.DataFrame)-> pd.DataFrame:
                                     9: 'Fall', 10: 'Fall', 11: 'Fall', 12: 'Winter'})
     return df_preprocessed
 
+
+# season에 대한 sin, cos 계산 함수
 def create_sin_cos_season(df: pd.DataFrame)-> pd.DataFrame:
     df_preprocessed = df.copy()
     # Cyclical encoding for seasons
@@ -33,6 +36,8 @@ def create_sin_cos_season(df: pd.DataFrame)-> pd.DataFrame:
     df_preprocessed = df_preprocessed.drop(['season_numeric'], axis=1)
     return df_preprocessed
 
+
+# 층수와 면적 관계 함수
 def create_floor_area_interaction(df: pd.DataFrame)-> pd.DataFrame:
     df_preprocessed = df.copy()
 
@@ -48,6 +53,10 @@ def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.Dat
 
     return train_data_scaled, valid_data_scaled, test_data_scaled
 
+
+
+
+### 변수 유형별 변환
 
 # 수치형 변수 standardization 함수
 def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame, scaling_type: str = 'standard') -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -94,6 +103,9 @@ def one_hot_encode(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data
 
 
 
+
+### 이상치 함수
+
 def handle_outliers(total_df):
     new_df = total_df.copy()
     
@@ -125,6 +137,9 @@ def handle_outliers(total_df):
     new_df_filtered.reset_index(drop = True, inplace = True)
 
     return new_df_filtered
+
+
+### 중복 제거
 
 def handle_duplicates(df):
     df.drop_duplicates(subset=['area_m2', 'contract_year_month', 'contract_day', 'contract_type', 'floor', 'latitude', 'longitude', 'age', 'deposit'], inplace = True)
