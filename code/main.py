@@ -1,7 +1,6 @@
 from utils.constant_utils import Directory
 from utils import common_utils
 import preprocessing
-import preprocessing_fn
 import features
 
 import model
@@ -18,18 +17,18 @@ def main():
         df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=15)
 
     # 이상치 처리
-    df = preprocessing_fn.handle_outliers(df)
+    df = preprocessing.handle_outliers(df)
 
     train_data_, valid_data_, test_data_ = common_utils.train_valid_test_split(df)
 
     # 중복 제거
-    train_data_ = preprocessing_fn.handle_duplicates(train_data_)
-    valid_data_ = preprocessing_fn.handle_duplicates(valid_data_)
+    train_data_ = preprocessing.handle_duplicates(train_data_)
+    valid_data_ = preprocessing.handle_duplicates(valid_data_)
 
     # 전처리 적용
-    train_data_ = preprocessing.time_feature_preprocessing(train_data_)
-    valid_data_ = preprocessing.time_feature_preprocessing(valid_data_)
-    test_data_ = preprocessing.time_feature_preprocessing(test_data_)
+    train_data_ = features.create_temporal_feature(train_data_)
+    valid_data_ = features.create_sin_cos_season(valid_data_)
+    test_data_ = features.create_floor_area_interaction(test_data_)
 
     # 새로운 피처 추가
     train_data, valid_data, test_data = features.create_clustering_target(train_data, valid_data, test_data)
@@ -41,10 +40,10 @@ def main():
     train_data, valid_data, test_data = features.create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
 
     # 정규화
-    train_data_, valid_data_, test_data_ = preprocessing_fn.standardization(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = preprocessing.standardization(train_data_, valid_data_, test_data_)
 
     # feature selection
-    train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing_fn.feature_selection(train_data_, valid_data_, test_data_)
+    train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing.feature_selection(train_data_, valid_data_, test_data_)
 
     # feature split
     X_train, y_train, X_valid, y_valid, X_test = common_utils.split_feature_target(train_data_scaled, valid_data_scaled, test_data_scaled)
