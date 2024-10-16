@@ -13,6 +13,6 @@ class Directory:
     interest_rate = pd.read_csv(os.path.join(root_path, "data/interestRate.csv"))
     park_info = pd.read_csv(os.path.join(root_path, "data/parkInfo.csv"))
     school_info = pd.read_csv(os.path.join(root_path, "data/schoolinfo.csv"))
-    subway = pd.read_csv(os.path.join(root_path, "data/subwayInfo.csv"))
+    subway_info = pd.read_csv(os.path.join(root_path, "data/subwayInfo.csv"))
 
     result_path = os.path.join(root_path, 'result')
