@@ -41,6 +41,9 @@ def create_floor_area_interaction(df: pd.DataFrame)-> pd.DataFrame:
     df_preprocessed['floor_area_interaction'] = df_preprocessed['floor'] * df_preprocessed['area_m2']
     return df_preprocessed
 
+def remove_built_year_2024(df: pd.DataFrame) -> pd.DataFrame:
+    df_filtered = df[df['built_year'] <= 2023]
+    return df_filtered
 
 def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.DataFrame, test_data_scaled: pd.DataFrame)-> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     drop_columns = ['type', 'season', 'date']
@@ -103,14 +106,14 @@ def handle_duplicates(df):
     df.drop_duplicates(subset=['area_m2', 'contract_year_month', 'contract_day', 'contract_type', 'floor', 'latitude', 'longitude', 'age', 'deposit'], inplace = True)
     return df
 
-def log_transform(df, column):
-    df.loc[df[column] > 0, column] = np.log(df[column][df[column] > 0]).astype(float)
-    df.loc[df[column] < 0, column] = -np.log(abs(df[column][df[column] < 0])).astype(float)
-    return df
+# def log_transform(df, column):
+#     df.loc[df[column] > 0, column] = np.log(df[column][df[column] > 0]).astype(float)
+#     df.loc[df[column] < 0, column] = -np.log(abs(df[column][df[column] < 0])).astype(float)
+#     return df
 
-def numeric_to_categoric(df, column, map_dict):
-    df[column] = df[column].map(map_dict).astype('category')
-    return df
+# def numeric_to_categoric(df, column, map_dict):
+#     df[column] = df[column].map(map_dict).astype('category')
+#     return df
 
 # 리스트 형태로 전달할 것
 def drop_columns(df, columns):
