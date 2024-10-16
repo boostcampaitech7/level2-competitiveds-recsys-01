@@ -158,7 +158,7 @@ def create_school_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFra
         data['schools_within_radius'] = counts  # 데이터에 추가
         return data
     
-    radius = 0.01 # 약 1km
+    radius = 0.02 # 약 2km
     train_data = count_schools_within_radius(train_data, radius)
     valid_data = count_schools_within_radius(valid_data, radius)
     test_data = count_schools_within_radius(test_data, radius)
@@ -176,16 +176,16 @@ def create_sum_park_area_within_radius(train_data: pd.DataFrame, valid_data: pd.
     park_coords = seoul_area_parks[['latitude', 'longitude']].values
     park_tree = KDTree(park_coords, leaf_size=10)
 
-    def sum_park_area_within_radius(data, radius=0.01):
+    def sum_park_area_within_radius(data, radius=0.02):
         area_sums = []  # 공원 면적 합을 저장할 리스트 초기화
         for i in range(0, len(data), 10000):  # 10,000개씩 배치로 처리
             batch = data.iloc[i:i + 10000]
             house_coords = batch[['latitude', 'longitude']].values
             indices = park_tree.query_radius(house_coords, r=radius)  # 반경 내의 인덱스 찾기
             
-            # 각 집에 대해 반경 1km 이내의 공원 면적의 합을 계산
+            # 각 집에 대해 반경 2km 이내의 공원 면적의 합을 계산
             for idx in indices:
-                if idx.size > 0:  # 1km 이내에 공원이 있을 경우
+                if idx.size > 0:  # 2km 이내에 공원이 있을 경우
                     areas_sum = seoul_area_parks.iloc[idx]['area'].sum()
                 else:
                     areas_sum = 0  # 공원이 없는 경우 면적 0
@@ -195,9 +195,60 @@ def create_sum_park_area_within_radius(train_data: pd.DataFrame, valid_data: pd.
         data['nearest_park_area_sum'] = area_sums
         return data
 
-    # train, valid, test 데이터에 반경 1km 이내의 공원 면적 합 추가
+    # train, valid, test 데이터에 반경 2km 이내의 공원 면적 합 추가
     train_data = sum_park_area_within_radius(train_data)
     valid_data = sum_park_area_within_radius(valid_data)
     test_data = sum_park_area_within_radius(test_data)
+
+    return train_data, valid_data, test_data
+
+def create_school_counts_within_radius_by_school_level(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    school_info = Directory.school_info
+    seoul_area_school = school_info[(school_info['latitude'] >= 37.0) & (school_info['latitude'] <= 38.0) &
+                                     (school_info['longitude'] >= 126.0) & (school_info['longitude'] <= 128.0)]
+    
+    # 초, 중, 고등학교의 좌표를 분리
+    elementary_schools = seoul_area_school[seoul_area_school['schoolLevel'] == 'elementary']
+    middle_schools = seoul_area_school[seoul_area_school['schoolLevel'] == 'middle']
+    high_schools = seoul_area_school[seoul_area_school['schoolLevel'] == 'high']
+
+    # 각 학교 유형의 좌표로 KDTree 생성
+    elementary_coords = elementary_schools[['latitude', 'longitude']].values
+    middle_coords = middle_schools[['latitude', 'longitude']].values
+    high_coords = high_schools[['latitude', 'longitude']].values
+
+    tree_elementary = KDTree(elementary_coords, leaf_size=10)
+    tree_middle = KDTree(middle_coords, leaf_size=10)
+    tree_high = KDTree(high_coords, leaf_size=10)
+
+    def count_schools_within_radius(data, radius):
+        counts_elementary = []  # 초등학교 개수를 저장할 리스트 초기화
+        counts_middle = []      # 중학교 개수를 저장할 리스트 초기화
+        counts_high = []        # 고등학교 개수를 저장할 리스트 초기화
+
+        for i in range(0, len(data), 10000):  # 10,000개씩 배치로 처리
+            batch = data.iloc[i:i + 10000]
+            house_coords = batch[['latitude', 'longitude']].values
+            
+            # 각 학교 유형의 개수 세기
+            indices_elementary = tree_elementary.query_radius(house_coords, r=radius)
+            indices_middle = tree_middle.query_radius(house_coords, r=radius)
+            indices_high = tree_high.query_radius(house_coords, r=radius)
+            
+            counts_elementary.extend(len(idx) for idx in indices_elementary)  # 각 배치의 초등학교 개수 추가
+            counts_middle.extend(len(idx) for idx in indices_middle)        # 각 배치의 중학교 개수 추가
+            counts_high.extend(len(idx) for idx in indices_high)            # 각 배치의 고등학교 개수 추가
+
+        # 데이터에 추가
+        data['elementary_schools_within_radius'] = counts_elementary
+        data['middle_schools_within_radius'] = counts_middle
+        data['high_schools_within_radius'] = counts_high
+        
+        return data
+
+    radius = 0.02  # 약 2km
+    train_data = count_schools_within_radius(train_data, radius)
+    valid_data = count_schools_within_radius(valid_data, radius)
+    test_data = count_schools_within_radius(test_data, radius)
 
     return train_data, valid_data, test_data

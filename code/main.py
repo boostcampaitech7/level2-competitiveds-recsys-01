@@ -3,7 +3,6 @@ from utils import common_utils
 import preprocessing
 import preprocessing_fn
 import features
-import feature_combination
 
 import model
 from inference import *
@@ -15,7 +14,7 @@ def main():
 
     # 클러스터 피처 apply
     for info_df_name in ['subway_info', 'school_info', 'park_info']:
-        info_df = getattr(Directory, info_df_name)  
+        info_df = getattr(Directory, info_df_name)
         df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=15)
 
     # 이상치 처리
@@ -33,7 +32,13 @@ def main():
     test_data_ = preprocessing.time_feature_preprocessing(test_data_)
 
     # 새로운 피처 추가
-    train_data_, valid_data_, test_data_ = feature_combination.feat1(train_data_, valid_data_, test_data_)
+    train_data, valid_data, test_data = features.create_clustering_target(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = features.create_nearest_subway_distance(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = features.create_subway_within_radius(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = features.create_nearest_park_distance(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = features.create_school_within_radius(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = features.create_sum_park_area_within_radius(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = features.create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
 
     # 정규화
     train_data_, valid_data_, test_data_ = preprocessing_fn.standardization(train_data_, valid_data_, test_data_)
@@ -59,7 +64,7 @@ def main():
     submission = inference(model_, 'submission', X_test)
 
     # save sample submission
-    common_utils.submission_to_csv(submission, 'cluster(20),timefeature,feat1_feature,xgboost(1000)')
+    common_utils.submission_to_csv(submission, 'cluster(20),timefeature,feat2_feature,xgboost(1000)')
 
     return prediction, mae
 
