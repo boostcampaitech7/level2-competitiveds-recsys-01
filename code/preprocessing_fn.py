@@ -74,38 +74,38 @@ def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_dat
 
     return train_data_scaled, valid_data_scaled, test_data_scaled
 
-def handle_outliers(total_df):
-    new_df = total_df.copy()
-    deposit = total_df['deposit']
-    weight = 1.5
+def handle_outliers(df):
+    train_df = df[df['type'] == 'train']
+    test_df = df[df['type'] == 'test']
 
-    Q1 = 0
-    Q3 = np.percentile(deposit.values, 75)
+    Q1 = train_df['deposit'].quantile(0.20)
+    Q3 = train_df['deposit'].quantile(0.80)
+    IQR = Q3 - Q1
 
-    iqr = Q3 - Q1
-    iqr_weight = iqr * weight
+    factor=1.5
+    lower_limit=train_df['deposit'].min()
 
-    lowest_val = Q1 - iqr_weight
-    # 최솟값
-    highest_val = Q3 + iqr_weight
-    # 최댓값
+    lower_bound = max(Q1 - factor * IQR, lower_limit)
+    upper_bound = Q3 + factor * IQR
 
-    low_outlier_index = deposit[(deposit < lowest_val)].index
-    high_outlier_index = deposit[(deposit > highest_val)].index
+    low_outlier_index = train_df[(train_df['deposit'] < lowest_val)].index
+    high_outlier_index = train_df[(train_df['deposit'] > highest_val)].index
 
-    # 최솟값보다 작고, 최댓값보다 큰 이상치 데이터들의 인덱스
-    new_df.loc[low_outlier_index,'deposit'] = lowest_val
-    new_df.loc[high_outlier_index,'deposit'] = highest_val
+    train_df.loc[low_outlier_index, 'deposit'] = lower_bound
+    train_df.loc[high_outlier_index, 'deposit'] = upper_bound
+    print(train_df[low_outlier_index], lower_bound)
+    print(train_df[high_outlier_index], upper_bound)
 
-    # 전체 데이터에서 이상치 데이터 제거
-    new_df.reset_index(drop = True, inplace = True)
-
-    return new_df
+    total_df = pd.concat([train_df, test_df], axis = 0)
+    return total_df
 
 def handle_duplicates(df):
     df.drop_duplicates(subset=['area_m2', 'contract_year_month', 'contract_day', 'contract_type', 'floor', 'latitude', 'longitude', 'age', 'deposit'], inplace = True)
     return df
 
+def area_square(df):
+    df['area_m2'] = df['area_m2'] ** 2
+    return df
 
 def log_transform(df, column):
     df.loc[df[column] > 0, column] = np.log(df[column][df[column] > 0]).astype(float)
@@ -119,4 +119,9 @@ def numeric_to_categoric(df, column, map_dict):
 # 리스트 형태로 전달할 것
 def drop_columns(df, columns):
     df.drop(columns=columns, inplace = True)
+    return df
+
+def handle_age_outliers(df):
+    df = df[df['age']>=0]
+    df.reset_index(inplace=True)
     return df
