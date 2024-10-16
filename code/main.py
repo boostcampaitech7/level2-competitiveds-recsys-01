@@ -15,7 +15,7 @@ def main():
     title : result 폴더에 저장될 실험명을 지정합니다.
     '''
     name = 'lim'
-    title = 'cluster,area_m2,drop_2024_age_contract_type'
+    title = 'cluster,area_m2,drop_2024_age_contract_type,school,subway'
 
     df = common_utils.merge_data(Directory.train_data, Directory.test_data)
 
@@ -58,11 +58,13 @@ def main():
     test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_type'])
 
     # 새로운 피처 추가
-    train_data_, valid_data_, test_data_ = features.create_nearest_subway_distance(train_data_, valid_data_, test_data_)
+    #train_data_, valid_data_, test_data_ = features.create_nearest_subway_distance(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.create_subway_within_radius(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.create_nearest_park_distance_and_area(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.create_school_within_radius(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.creat_area_m2_category(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = features.create_nearest_school_distance(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = features.weighted_subway_distance(train_data_, valid_data_, test_data_)
 
     # 정규화
     train_data_, valid_data_, test_data_ = preprocessing_fn.standardization(train_data_, valid_data_, test_data_)
