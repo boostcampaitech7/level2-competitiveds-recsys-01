@@ -32,6 +32,7 @@ def train_valid_test_split(df):
 def train_valid_concat(train, valid):
     total = pd.concat([train, valid])
     return total
+
 def split_feature_target(train_data_scaled, valid_data_scaled, test_data_scaled):
     X_train = train_data_scaled.drop(columns=['deposit'])
     y_train = train_data_scaled['deposit']
@@ -40,7 +41,6 @@ def split_feature_target(train_data_scaled, valid_data_scaled, test_data_scaled)
     X_test = test_data_scaled.copy()
     
     return X_train, y_train, X_valid, y_valid, X_test
-
 
 def submission_to_csv(submit_df, file_name):
     submission_path = os.path.join(Directory.result_path, "submission")

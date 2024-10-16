@@ -88,13 +88,11 @@ def handle_outliers(df):
     lower_bound = max(Q1 - factor * IQR, lower_limit)
     upper_bound = Q3 + factor * IQR
 
-    low_outlier_index = train_df[(train_df['deposit'] < lowest_val)].index
-    high_outlier_index = train_df[(train_df['deposit'] > highest_val)].index
+    low_outlier_index = train_df[(train_df['deposit'] < lower_bound)].index
+    high_outlier_index = train_df[(train_df['deposit'] > upper_bound)].index
 
     train_df.loc[low_outlier_index, 'deposit'] = lower_bound
     train_df.loc[high_outlier_index, 'deposit'] = upper_bound
-    print(train_df[low_outlier_index], lower_bound)
-    print(train_df[high_outlier_index], upper_bound)
 
     total_df = pd.concat([train_df, test_df], axis = 0)
     return total_df

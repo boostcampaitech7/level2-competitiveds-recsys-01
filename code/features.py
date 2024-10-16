@@ -178,8 +178,8 @@ def distance_gangnam(df):
     
     df['distance_km'] = df.apply(calculate_distance, axis=1)
     df['gangnam_5km'] = (df['distance_km'] <= 5).astype(int)
-    df['gangnam_10km'] = (df['distance_km'] <= 7).astype(int)
-    df['gangnam_remote'] = (df['distance_km'] > 7).astype(int)
+    df['gangnam_10km'] = (df['distance_km'] <= 10).astype(int)
+    df['gangnam_remote'] = (df['distance_km'] > 10).astype(int)
     df.drop(columns=['distance_km'], inplace=True)
 
     return df
