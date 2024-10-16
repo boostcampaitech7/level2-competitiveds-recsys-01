@@ -3,46 +3,7 @@ from utils.constant_utils import Config, Directory
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import KDTree
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-
-def create_temporal_feature(df: pd.DataFrame)-> pd.DataFrame:
-    df_preprocessed = df.copy()
-    
-    df_preprocessed['year'] = df_preprocessed['contract_year_month'].astype(str).str[:4].astype(int)
-    df_preprocessed['month'] = df_preprocessed['contract_year_month'].astype(str).str[4:].astype(int)
-    df_preprocessed['date'] = pd.to_datetime(df_preprocessed['year'].astype(str) + df_preprocessed['month'].astype(str).str.zfill(2) + df_preprocessed['contract_day'].astype(str).str.zfill(2))
-
-    # 기본 특성 생성 (모든 데이터셋에 동일하게 적용 가능)
-    df_preprocessed['day_of_week'] = df_preprocessed['date'].dt.dayofweek
-    df_preprocessed['is_weekend'] = df_preprocessed['day_of_week'].isin([5, 6]).astype(int)
-    df_preprocessed['quarter'] = df_preprocessed['date'].dt.quarter
-    df_preprocessed['is_month_end'] = (df_preprocessed['date'].dt.is_month_end).astype(int)
-    df_preprocessed['season'] = df_preprocessed['month'].map({1: 'Winter', 2: 'Winter', 3: 'Spring', 4: 'Spring', 
-                                    5: 'Spring', 6: 'Summer', 7: 'Summer', 8: 'Summer', 
-                                    9: 'Fall', 10: 'Fall', 11: 'Fall', 12: 'Winter'})
-    return df_preprocessed
-
-def create_sin_cos_season(df: pd.DataFrame)-> pd.DataFrame:
-    df_preprocessed = df.copy()
-    # Cyclical encoding for seasons
-    season_dict = {'Spring': 0, 'Summer': 1, 'Fall': 2, 'Winter': 3}
-    df_preprocessed['season_numeric'] = df_preprocessed['season'].map(season_dict)
-    df_preprocessed['season_sin'] = np.sin(2 * np.pi * df_preprocessed['season_numeric'] / 4)
-    df_preprocessed['season_cos'] = np.cos(2 * np.pi * df_preprocessed['season_numeric'] / 4)
-
-    df_preprocessed = df_preprocessed.drop(['season_numeric'], axis=1)
-    return df_preprocessed
-
-
-def create_floor_area_interaction(df: pd.DataFrame) -> pd.DataFrame:
-    df_preprocessed = df.copy()
-
-    df_preprocessed['floor_weighted'] = df_preprocessed['floor'].apply(lambda x: x if x >= 0 else x * -0.5)
-    df_preprocessed['floor_area_interaction'] = (
-        df_preprocessed['floor_weighted'] * df_preprocessed['area_m2']
-    )
-    df_preprocessed.drop(['floor_weighted'], axis = 1, inplace = True)
-    return df_preprocessed
+from geopy.distance import great_circle
 
 def clustering(total_df, info_df, feat_name, n_clusters=20):
     info = info_df[['longitude', 'latitude']].values
@@ -75,7 +36,7 @@ def create_cluster_distance_to_centroid(data: pd.DataFrame, centroids) -> pd.Dat
 
 def create_clustering_target(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     # K-means 클러스터링
-    k = 25
+    k = 20
     kmeans = KMeans(n_clusters=k, random_state=Config.RANDOM_SEED)
     train_data['cluster'] = kmeans.fit_predict(train_data[['latitude', 'longitude']])
     valid_data['cluster'] = kmeans.predict(valid_data[['latitude', 'longitude']])
@@ -153,6 +114,221 @@ def create_subway_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFra
 
     return train_data, valid_data, test_data
 
+def create_nearest_park_distance(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    park_data = Directory.park_info
+
+    seoul_area_parks = park_data[(park_data['latitude'] >= 37.0) & (park_data['latitude'] <= 38.0) &
+                                (park_data['longitude'] >= 126.0) & (park_data['longitude'] <= 128.0)]
+
+    # 수도권 공원의 좌표로 KDTree 생성
+    park_coords = seoul_area_parks[['latitude', 'longitude']].values
+    park_tree = KDTree(park_coords, leaf_size=10)
+
+    def add_nearest_park_features(data):
+        # 각 집의 좌표로 가장 가까운 공원 찾기
+        house_coords = data[['latitude', 'longitude']].values
+        distances, indices = park_tree.query(house_coords, k=1)  # 가장 가까운 공원 찾기
+
+        # 가장 가까운 공원까지의 거리 및 해당 공원의 면적 추가
+        nearest_park_distances = distances.flatten()
+
+        data['nearest_park_distance'] = nearest_park_distances
+        return data
+
+    # train, valid, test 데이터에 가장 가까운 공원 거리 및 면적 추가
+    train_data = add_nearest_park_features(train_data)
+    valid_data = add_nearest_park_features(valid_data)
+    test_data = add_nearest_park_features(test_data)
+
+    return train_data, valid_data, test_data
+
+def create_school_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    school_info = Directory.school_info
+    seoul_area_school = school_info[(school_info['latitude'] >= 37.0) & (school_info['latitude'] <= 38.0) &
+                                (school_info['longitude'] >= 126.0) & (school_info['longitude'] <= 128.0)]
+    school_coords = seoul_area_school[['latitude', 'longitude']].values
+    tree = KDTree(school_coords, leaf_size=10)
+
+    def count_schools_within_radius(data, radius):
+        counts = []  # 학교 개수를 저장할 리스트 초기화
+        for i in range(0, len(data), 10000):  # 10,000개씩 배치로 처리
+            batch = data.iloc[i:i + 10000]
+            house_coords = batch[['latitude', 'longitude']].values
+            indices = tree.query_radius(house_coords, r=radius)  # 반경 내의 인덱스 찾기
+            counts.extend(len(idx) for idx in indices)  # 각 배치의 학교 개수 추가
+        data['schools_within_radius'] = counts  # 데이터에 추가
+        return data
+    
+    radius = 0.02 # 약 2km
+    train_data = count_schools_within_radius(train_data, radius)
+    valid_data = count_schools_within_radius(valid_data, radius)
+    test_data = count_schools_within_radius(test_data, radius)
+
+    return train_data, valid_data, test_data
+
+def create_sum_park_area_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    park_data = Directory.park_info
+
+    # 수도권 공원의 좌표 필터링
+    seoul_area_parks = park_data[(park_data['latitude'] >= 37.0) & (park_data['latitude'] <= 38.0) &
+                                  (park_data['longitude'] >= 126.0) & (park_data['longitude'] <= 128.0)]
+
+    # 수도권 공원의 좌표로 KDTree 생성
+    park_coords = seoul_area_parks[['latitude', 'longitude']].values
+    park_tree = KDTree(park_coords, leaf_size=10)
+
+    def sum_park_area_within_radius(data, radius=0.02):
+        area_sums = []  # 공원 면적 합을 저장할 리스트 초기화
+        for i in range(0, len(data), 10000):  # 10,000개씩 배치로 처리
+            batch = data.iloc[i:i + 10000]
+            house_coords = batch[['latitude', 'longitude']].values
+            indices = park_tree.query_radius(house_coords, r=radius)  # 반경 내의 인덱스 찾기
+            
+            # 각 집에 대해 반경 2km 이내의 공원 면적의 합을 계산
+            for idx in indices:
+                if idx.size > 0:  # 2km 이내에 공원이 있을 경우
+                    areas_sum = seoul_area_parks.iloc[idx]['area'].sum()
+                else:
+                    areas_sum = 0  # 공원이 없는 경우 면적 0
+                area_sums.append(areas_sum)  # 면적 합 추가
+
+        # 결과 추가
+        data['nearest_park_area_sum'] = area_sums
+        return data
+
+    # train, valid, test 데이터에 반경 2km 이내의 공원 면적 합 추가
+    train_data = sum_park_area_within_radius(train_data)
+    valid_data = sum_park_area_within_radius(valid_data)
+    test_data = sum_park_area_within_radius(test_data)
+
+    return train_data, valid_data, test_data
+
+def create_school_counts_within_radius_by_school_level(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    school_info = Directory.school_info
+    seoul_area_school = school_info[(school_info['latitude'] >= 37.0) & (school_info['latitude'] <= 38.0) &
+                                     (school_info['longitude'] >= 126.0) & (school_info['longitude'] <= 128.0)]
+    
+    # 초, 중, 고등학교의 좌표를 분리
+    elementary_schools = seoul_area_school[seoul_area_school['schoolLevel'] == 'elementary']
+    middle_schools = seoul_area_school[seoul_area_school['schoolLevel'] == 'middle']
+    high_schools = seoul_area_school[seoul_area_school['schoolLevel'] == 'high']
+
+    # 각 학교 유형의 좌표로 KDTree 생성
+    elementary_coords = elementary_schools[['latitude', 'longitude']].values
+    middle_coords = middle_schools[['latitude', 'longitude']].values
+    high_coords = high_schools[['latitude', 'longitude']].values
+
+    tree_elementary = KDTree(elementary_coords, leaf_size=10)
+    tree_middle = KDTree(middle_coords, leaf_size=10)
+    tree_high = KDTree(high_coords, leaf_size=10)
+
+    def count_schools_within_radius(data, radius):
+        counts_elementary = []  # 초등학교 개수를 저장할 리스트 초기화
+        counts_middle = []      # 중학교 개수를 저장할 리스트 초기화
+        counts_high = []        # 고등학교 개수를 저장할 리스트 초기화
+
+        for i in range(0, len(data), 10000):  # 10,000개씩 배치로 처리
+            batch = data.iloc[i:i + 10000]
+            house_coords = batch[['latitude', 'longitude']].values
+            
+            # 각 학교 유형의 개수 세기
+            indices_elementary = tree_elementary.query_radius(house_coords, r=radius)
+            indices_middle = tree_middle.query_radius(house_coords, r=radius)
+            indices_high = tree_high.query_radius(house_coords, r=radius)
+            
+            counts_elementary.extend(len(idx) for idx in indices_elementary)  # 각 배치의 초등학교 개수 추가
+            counts_middle.extend(len(idx) for idx in indices_middle)        # 각 배치의 중학교 개수 추가
+            counts_high.extend(len(idx) for idx in indices_high)            # 각 배치의 고등학교 개수 추가
+
+        # 데이터에 추가
+        data['elementary_schools_within_radius'] = counts_elementary
+        data['middle_schools_within_radius'] = counts_middle
+        data['high_schools_within_radius'] = counts_high
+        
+        return data
+
+    radius = 0.02  # 약 2km
+    train_data = count_schools_within_radius(train_data, radius)
+    valid_data = count_schools_within_radius(valid_data, radius)
+    test_data = count_schools_within_radius(test_data, radius)
+
+    return train_data, valid_data, test_data
+
+
+def distance_gangnam(df):
+    gangnam = (37.498095, 127.028361548)
+
+    def calculate_distance(df):
+        point = (df['latitude'], df['longitude'])
+        distance_km = great_circle(gangnam, point).kilometers
+        return distance_km
+    
+    df['distance_km'] = df.apply(calculate_distance, axis=1)
+    df['gangnam_5km'] = (df['distance_km'] <= 5).astype(int)
+    df['gangnam_10km'] = (df['distance_km'] <= 10).astype(int)
+    df['gangnam_remote'] = (df['distance_km'] > 10).astype(int)
+    df.drop(columns=['distance_km'], inplace=True)
+
+    return df
+
+
+def create_temporal_feature(df: pd.DataFrame)-> pd.DataFrame:
+    df_preprocessed = df.copy()
+    
+    df_preprocessed['year'] = df_preprocessed['contract_year_month'].astype(str).str[:4].astype(int)
+    df_preprocessed['month'] = df_preprocessed['contract_year_month'].astype(str).str[4:].astype(int)
+    df_preprocessed['date'] = pd.to_datetime(df_preprocessed['year'].astype(str) + df_preprocessed['month'].astype(str).str.zfill(2) + df_preprocessed['contract_day'].astype(str).str.zfill(2))
+
+    # 기본 특성 생성 (모든 데이터셋에 동일하게 적용 가능)
+    df_preprocessed['day_of_week'] = df_preprocessed['date'].dt.dayofweek
+    #df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
+    df_preprocessed['quarter'] = df_preprocessed['date'].dt.quarter
+    df_preprocessed['is_month_end'] = (df_preprocessed['date'].dt.is_month_end).astype(int)
+    df_preprocessed['season'] = df_preprocessed['month'].map({1: 'Winter', 2: 'Winter', 3: 'Spring', 4: 'Spring', 
+                                    5: 'Spring', 6: 'Summer', 7: 'Summer', 8: 'Summer', 
+                                    9: 'Fall', 10: 'Fall', 11: 'Fall', 12: 'Winter'})
+    return df_preprocessed
+
+
+def create_sin_cos_season(df: pd.DataFrame)-> pd.DataFrame:
+    df_preprocessed = df.copy()
+    # Cyclical encoding for seasons
+    season_dict = {'Spring': 0, 'Summer': 1, 'Fall': 2, 'Winter': 3}
+    df_preprocessed['season_numeric'] = df_preprocessed['season'].map(season_dict)
+    df_preprocessed['season_sin'] = np.sin(2 * np.pi * df_preprocessed['season_numeric'] / 4)
+    df_preprocessed['season_cos'] = np.cos(2 * np.pi * df_preprocessed['season_numeric'] / 4)
+
+    df_preprocessed = df_preprocessed.drop(['season_numeric'], axis=1)
+    return df_preprocessed
+
+
+
+def create_sin_cos_season(df: pd.DataFrame)-> pd.DataFrame:
+    df_preprocessed = df.copy()
+    # Cyclical encoding for seasons
+    season_dict = {'Spring': 0, 'Summer': 1, 'Fall': 2, 'Winter': 3}
+    df_preprocessed['season_numeric'] = df_preprocessed['season'].map(season_dict)
+    df_preprocessed['season_sin'] = np.sin(2 * np.pi * df_preprocessed['season_numeric'] / 4)
+    df_preprocessed['season_cos'] = np.cos(2 * np.pi * df_preprocessed['season_numeric'] / 4)
+
+    df_preprocessed = df_preprocessed.drop(['season_numeric'], axis=1)
+    return df_preprocessed
+
+
+def create_floor_area_interaction(df: pd.DataFrame) -> pd.DataFrame:
+    df_preprocessed = df.copy()
+
+    df_preprocessed['floor_weighted'] = df_preprocessed['floor'].apply(lambda x: x if x >= 0 else x * -0.5)
+    df_preprocessed['floor_area_interaction'] = (
+        df_preprocessed['floor_weighted'] * df_preprocessed['area_m2']
+    )
+    df_preprocessed.drop(['floor_weighted'], axis = 1, inplace = True)
+    return df_preprocessed
+
+from model import *
+
+
+
 def create_nearest_park_distance_and_area(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     park_data = Directory.park_info
 
@@ -183,29 +359,6 @@ def create_nearest_park_distance_and_area(train_data: pd.DataFrame, valid_data: 
 
     return train_data, valid_data, test_data
 
-def create_school_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    school_info = Directory.school_info
-    seoul_area_school = school_info[(school_info['latitude'] >= 37.0) & (school_info['latitude'] <= 38.0) &
-                                (school_info['longitude'] >= 126.0) & (school_info['longitude'] <= 128.0)]
-    school_coords = seoul_area_school[['latitude', 'longitude']].values
-    tree = KDTree(school_coords, leaf_size=10)
-
-    def count_schools_within_radius(data, radius):
-        counts = []  # 학교 개수를 저장할 리스트 초기화
-        for i in range(0, len(data), 10000):  # 10,000개씩 배치로 처리
-            batch = data.iloc[i:i + 10000]
-            house_coords = batch[['latitude', 'longitude']].values
-            indices = tree.query_radius(house_coords, r=radius)  # 반경 내의 인덱스 찾기
-            counts.extend(len(idx) for idx in indices)  # 각 배치의 학교 개수 추가
-        data['schools_within_radius'] = counts  # 데이터에 추가
-        return data
-    
-    radius = 0.01 # 약 1km
-    train_data = count_schools_within_radius(train_data, radius)
-    valid_data = count_schools_within_radius(valid_data, radius)
-    test_data = count_schools_within_radius(test_data, radius)
-
-    return train_data, valid_data, test_data
 
 
 def assign_info_cluster(train_data, school_info, park_info, subway_info):
