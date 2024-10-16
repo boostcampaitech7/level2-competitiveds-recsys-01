@@ -3,6 +3,7 @@ from utils import common_utils
 import preprocessing
 import preprocessing_fn
 import features
+import feature_combination
 
 import model
 from inference import *
@@ -32,12 +33,7 @@ def main():
     test_data_ = preprocessing.time_feature_preprocessing(test_data_)
 
     # 새로운 피처 추가
-    train_data_, valid_data_, test_data_ = features.create_clustering_target(train_data_, valid_data_, test_data_)
-    train_data_, valid_data_, test_data_ = features.create_nearest_subway_distance(train_data_, valid_data_, test_data_)
-    train_data_, valid_data_, test_data_ = features.create_subway_within_radius(train_data_, valid_data_, test_data_)
-    train_data_, valid_data_, test_data_ = features.create_nearest_park_distance(train_data_, valid_data_, test_data_)
-    train_data_, valid_data_, test_data_ = features.create_school_within_radius(train_data_, valid_data_, test_data_)
-    train_data_, valid_data_, test_data_ = features.create_sum_park_area_within_radius(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = feature_combination.feat1(train_data_, valid_data_, test_data_)
 
     # 정규화
     train_data_, valid_data_, test_data_ = preprocessing_fn.standardization(train_data_, valid_data_, test_data_)
@@ -58,12 +54,12 @@ def main():
     print("Train with total dataset")
     X_total, y_total = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
     model_ = model.xgboost(X_total, y_total)
-    
+
     # inference with test data
     submission = inference(model_, 'submission', X_test)
 
     # save sample submission
-    common_utils.submission_to_csv(submission, 'cluster(20),timefeature,school_subway_park(distance, sum_area)_feature, xgboost(1000)')
+    common_utils.submission_to_csv(submission, 'cluster(20),timefeature,feat1_feature,xgboost(1000)')
 
     return prediction, mae
 
