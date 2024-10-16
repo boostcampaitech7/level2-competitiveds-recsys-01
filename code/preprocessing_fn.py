@@ -35,11 +35,22 @@ def create_sin_cos_season(df: pd.DataFrame)-> pd.DataFrame:
     df_preprocessed = df_preprocessed.drop(['season_numeric'], axis=1)
     return df_preprocessed
 
-def create_floor_area_interaction(df: pd.DataFrame)-> pd.DataFrame:
+# def create_floor_area_interaction(df: pd.DataFrame)-> pd.DataFrame:
+#     df_preprocessed = df.copy()
+
+#     df_preprocessed['floor_area_interaction'] = df_preprocessed['floor'] * df_preprocessed['area_m2']
+#     return df_preprocessed
+
+def create_floor_area_interaction(df: pd.DataFrame) -> pd.DataFrame:
     df_preprocessed = df.copy()
 
-    df_preprocessed['floor_area_interaction'] = df_preprocessed['floor'] * df_preprocessed['area_m2']
+    df_preprocessed['floor_weighted'] = df_preprocessed['floor'].apply(lambda x: x if x >= 0 else x * -0.5)
+    df_preprocessed['floor_area_interaction'] = (
+        df_preprocessed['floor_weighted'] * df_preprocessed['area_m2']
+    )
+    df_preprocessed.drop(['floor_weighted'], axis = 1, inplace = True)
     return df_preprocessed
+
 
 
 
@@ -120,6 +131,24 @@ def boxcox_re_transform(prediction, pt):
 #     return pt, data
 
 
+# def handle_outliers(df):
+#     factor=1.5
+#     lower_limit=0
+
+#     train_df = df[df['type'] == 'train']
+#     test_df = df[df['type'] == 'test']
+
+#     Q1 = train_df['deposit'].quantile(0.25)
+#     Q3 = train_df['deposit'].quantile(0.75)
+#     IQR = Q3 - Q1
+#     lower_bound = max(Q1 - factor * IQR, lower_limit)
+#     upper_bound = Q3 + factor * IQR
+
+#     filtered_train_df = train_df[(train_df['deposit'] >= lower_bound) & (train_df['deposit'] <= upper_bound)]
+#     total_df = pd.concat([filtered_train_df, test_df], axis = 0)
+    
+#     return total_df
+
 def handle_outliers(total_df):
     new_df = total_df.copy()
     deposit = total_df['deposit']
@@ -152,3 +181,9 @@ def handle_duplicates(df):
     df.drop_duplicates(subset=['area_m2', 'contract_year_month', 'contract_day', 'contract_type', 'floor', 'latitude', 'longitude', 'age', 'deposit'], inplace = True)
     return df
 
+
+
+def filter_age(df):
+    df = df[df['age'] >= 0]
+    
+    return df
