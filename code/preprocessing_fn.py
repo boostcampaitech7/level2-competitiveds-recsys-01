@@ -96,6 +96,10 @@ def one_hot_encode(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data
 
 def handle_outliers(total_df):
     new_df = total_df.copy()
+    
+    # 'age' column이 0보다 작은 행 제거
+    new_df_filtered = new_df[new_df['age'] >= 0]
+    
     deposit = total_df['deposit']
     weight = 1.5
 
@@ -114,13 +118,13 @@ def handle_outliers(total_df):
     high_outlier_index = deposit[(deposit > highest_val)].index
 
     # 최솟값보다 작고, 최댓값보다 큰 이상치 데이터들의 인덱스
-    new_df.loc[low_outlier_index,'deposit'] = lowest_val
-    new_df.loc[high_outlier_index,'deposit'] = highest_val
+    new_df_filtered.loc[low_outlier_index,'deposit'] = lowest_val
+    new_df_filtered.loc[high_outlier_index,'deposit'] = highest_val
 
     # 전체 데이터에서 이상치 데이터 제거
-    new_df.reset_index(drop = True, inplace = True)
+    new_df_filtered.reset_index(drop = True, inplace = True)
 
-    return new_df
+    return new_df_filtered
 
 def handle_duplicates(df):
     df.drop_duplicates(subset=['area_m2', 'contract_year_month', 'contract_day', 'contract_type', 'floor', 'latitude', 'longitude', 'age', 'deposit'], inplace = True)

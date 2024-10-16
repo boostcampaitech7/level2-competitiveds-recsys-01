@@ -3,6 +3,8 @@ import pandas as pd
 
 class Config:
     RANDOM_SEED = 42
+    CATEGORICAL_COLUMNS = ['contract_type']
+    NUMERICAL_COLUMNS = ['area_m2','contract_year_month','contract_day','floor','built_year','latitude','longitude','age','deposit']
 
 class Directory:
     root_path = "/data/ephemeral/home/"
@@ -15,4 +17,4 @@ class Directory:
     school_info = pd.read_csv(os.path.join(root_path, "data/schoolinfo.csv"))
     subway_info = pd.read_csv(os.path.join(root_path, "data/subwayInfo.csv"))
 
-    result_path = os.path.join(root_path, 'result')
+    result_path = os.path.join(root_path, 'level2-competitiveds-recsys-01/result')

@@ -40,6 +40,8 @@ def main():
     train_data_, valid_data_, test_data_ = features.create_nearest_park_distance_and_area(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.create_school_within_radius(train_data_, valid_data_, test_data_)
     train_data_, valid_data_, test_data_ = features.create_place_within_radius(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = features.categorization(train_data_, valid_data_, test_data_, category = 'age')
+    train_data_, valid_data_, test_data_ = features.categorization(train_data_, valid_data_, test_data_ , category = 'floor')
 
     # 정규화
     train_data_, valid_data_, test_data_ = preprocessing_fn.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')
@@ -67,7 +69,7 @@ def main():
 
     # save sample submission
     print("saving result")
-    common_utils.submission_to_csv(submission, 'cluster,timefeature, school_subway_park_feature + facility_count_xgboost(1000)')
+    common_utils.submission_to_csv(submission, 'cluster, timefeature, park_feature, facility_count_xgboost(1000)')
 
     return prediction, mae
 

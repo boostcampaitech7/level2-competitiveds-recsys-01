@@ -4,6 +4,9 @@ import pandas as pd
 import numpy as np
 from sklearn.neighbors import KDTree
 
+
+### 클러스터링
+
 def clustering(total_df, info_df, feat_name, n_clusters=20):
     info = info_df[['longitude', 'latitude']].values
     
@@ -56,6 +59,9 @@ def create_clustering_target(train_data: pd.DataFrame, valid_data: pd.DataFrame,
     test_data = create_cluster_distance_to_centroid(test_data, centroids)
 
     return train_data, valid_data, test_data
+
+
+### 거리
 
 def create_nearest_subway_distance(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     subwayInfo = Directory.subway_info
@@ -237,4 +243,30 @@ def create_place_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFram
     valid_data['public_facility_count'] = valid_counts
     test_data['public_facility_count'] = test_counts
     
+    return train_data, valid_data, test_data
+
+
+### 범주화
+
+def categorization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame, category: str = None, drop: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    if category == 'age':
+        train_data['new_age_category'] = train_data['age'].apply(lambda x: 'Other' if x >= 50 else x).astype('category')
+        valid_data['new_age_category'] = valid_data['age'].apply(lambda x: 'Other' if x >= 50 else x).astype('category')
+        test_data['new_age_category'] = test_data['age'].apply(lambda x: 'Other' if x >= 50 else x).astype('category')
+        
+        if drop:
+            train_data.drop(columns=['age'], inplace=True)
+            valid_data.drop(columns=['age'], inplace=True)
+            test_data.drop(columns=['age'], inplace=True)
+
+    elif category == 'floor':
+        train_data['new_floor_category'] = train_data['floor'].apply(lambda x: 'Other' if x <= 0 or x >= 30 else ('25~30' if 25 <= x <= 30 else x)).astype('category')
+        valid_data['new_floor_category'] = valid_data['floor'].apply(lambda x: 'Other' if x <= 0 or x >= 30 else ('25~30' if 25 <= x <= 30 else x)).astype('category')
+        test_data['new_floor_category'] = test_data['floor'].apply(lambda x: 'Other' if x <= 0 or x >= 30 else ('25~30' if 25 <= x <= 30 else x)).astype('category')
+
+        if drop:
+            train_data.drop(columns=['floor'], inplace=True)
+            valid_data.drop(columns=['floor'], inplace=True)
+            test_data.drop(columns=['floor'], inplace=True)
+
     return train_data, valid_data, test_data
