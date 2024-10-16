@@ -35,11 +35,6 @@ def create_sin_cos_season(df: pd.DataFrame)-> pd.DataFrame:
     df_preprocessed = df_preprocessed.drop(['season_numeric'], axis=1)
     return df_preprocessed
 
-# def create_floor_area_interaction(df: pd.DataFrame)-> pd.DataFrame:
-#     df_preprocessed = df.copy()
-
-#     df_preprocessed['floor_area_interaction'] = df_preprocessed['floor'] * df_preprocessed['area_m2']
-#     return df_preprocessed
 
 def create_floor_area_interaction(df: pd.DataFrame) -> pd.DataFrame:
     df_preprocessed = df.copy()
@@ -52,16 +47,6 @@ def create_floor_area_interaction(df: pd.DataFrame) -> pd.DataFrame:
     return df_preprocessed
 
 
-
-
-
-# def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.DataFrame, test_data_scaled: pd.DataFrame)-> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-#     drop_columns = ['type', 'season', 'date']
-#     train_data_scaled.drop(drop_columns, axis = 1, inplace = True)
-#     valid_data_scaled.drop(drop_columns, axis = 1, inplace = True)
-#     test_data_scaled.drop(drop_columns + ['deposit'], axis = 1, inplace = True)
-
-#     return train_data_scaled, valid_data_scaled, test_data_scaled
 
 def feature_selection(train_data_scaled, valid_data_scaled, test_data_scaled):
     drop_columns = ['type', 'season', 'date']
@@ -93,17 +78,6 @@ def standardization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_dat
     return train_data_scaled, valid_data_scaled, test_data_scaled
 
 
-def target_log_transform(y_train):
-    y_train_transformed = np.log1p(y_train)
-
-    return y_train_transformed
-
-def target_log_re_transform(prediction):   
-    y_pred = np.expm1(prediction)
-
-    return y_pred
-
-
 # 방법 2: sklearn의 PowerTransformer 사용 (Box-Cox 방법)
 def boxcox_transform(y_train):
     # PowerTransformer 초기화 (Box-Cox 방법 사용)
@@ -131,51 +105,23 @@ def boxcox_re_transform(prediction, pt):
 #     return pt, data
 
 
-# def handle_outliers(df):
-#     factor=1.5
-#     lower_limit=0
+def handle_outliers(df):
+    factor=1.5
+    lower_limit=0
 
-#     train_df = df[df['type'] == 'train']
-#     test_df = df[df['type'] == 'test']
+    train_df = df[df['type'] == 'train']
+    test_df = df[df['type'] == 'test']
 
-#     Q1 = train_df['deposit'].quantile(0.25)
-#     Q3 = train_df['deposit'].quantile(0.75)
-#     IQR = Q3 - Q1
-#     lower_bound = max(Q1 - factor * IQR, lower_limit)
-#     upper_bound = Q3 + factor * IQR
+    Q1 = train_df['deposit'].quantile(0.25)
+    Q3 = train_df['deposit'].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = max(Q1 - factor * IQR, lower_limit)
+    upper_bound = Q3 + factor * IQR
 
-#     filtered_train_df = train_df[(train_df['deposit'] >= lower_bound) & (train_df['deposit'] <= upper_bound)]
-#     total_df = pd.concat([filtered_train_df, test_df], axis = 0)
+    filtered_train_df = train_df[(train_df['deposit'] >= lower_bound) & (train_df['deposit'] <= upper_bound)]
+    total_df = pd.concat([filtered_train_df, test_df], axis = 0)
     
-#     return total_df
-
-def handle_outliers(total_df):
-    new_df = total_df.copy()
-    deposit = total_df['deposit']
-    weight = 1.5
-
-    Q1 = 0
-    Q3 = np.percentile(deposit.values, 75)
-
-    iqr = Q3 - Q1
-    iqr_weight = iqr * weight
-
-    lowest_val = Q1 - iqr_weight
-    # 최솟값
-    highest_val = Q3 + iqr_weight
-    # 최댓값
-
-    low_outlier_index = deposit[(deposit < lowest_val)].index
-    high_outlier_index = deposit[(deposit > highest_val)].index
-
-    # 최솟값보다 작고, 최댓값보다 큰 이상치 데이터들의 인덱스
-    new_df.loc[low_outlier_index,'deposit'] = lowest_val
-    new_df.loc[high_outlier_index,'deposit'] = highest_val
-
-    # 전체 데이터에서 이상치 데이터 제거
-    new_df.reset_index(drop = True, inplace = True)
-
-    return new_df
+    return total_df
 
 def handle_duplicates(df):
     df.drop_duplicates(subset=['area_m2', 'contract_year_month', 'contract_day', 'contract_type', 'floor', 'latitude', 'longitude', 'age', 'deposit'], inplace = True)
