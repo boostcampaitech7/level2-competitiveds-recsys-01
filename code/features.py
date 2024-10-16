@@ -3,6 +3,7 @@ from utils.constant_utils import Config, Directory
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import KDTree
+from geopy.distance import great_circle
 
 def clustering(total_df, info_df, feat_name, n_clusters=20):
     info = info_df[['longitude', 'latitude']].values
@@ -252,6 +253,24 @@ def create_school_counts_within_radius_by_school_level(train_data: pd.DataFrame,
     test_data = count_schools_within_radius(test_data, radius)
 
     return train_data, valid_data, test_data
+
+
+def distance_gangnam(df):
+    gangnam = (37.498095, 127.028361548)
+
+    def calculate_distance(df):
+        point = (df['latitude'], df['longitude'])
+        distance_km = great_circle(gangnam, point).kilometers
+        return distance_km
+    
+    df['distance_km'] = df.apply(calculate_distance, axis=1)
+    df['gangnam_5km'] = (df['distance_km'] <= 5).astype(int)
+    df['gangnam_10km'] = (df['distance_km'] <= 10).astype(int)
+    df['gangnam_remote'] = (df['distance_km'] > 10).astype(int)
+    df.drop(columns=['distance_km'], inplace=True)
+
+    return df
+
 
 def create_temporal_feature(df: pd.DataFrame)-> pd.DataFrame:
     df_preprocessed = df.copy()
