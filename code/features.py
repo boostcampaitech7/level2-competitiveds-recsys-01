@@ -113,7 +113,7 @@ def create_subway_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFra
 
     return train_data, valid_data, test_data
 
-def create_nearest_park_distance_and_area(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def create_nearest_park_distance(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     park_data = Directory.park_info
 
     seoul_area_parks = park_data[(park_data['latitude'] >= 37.0) & (park_data['latitude'] <= 38.0) &
@@ -130,10 +130,8 @@ def create_nearest_park_distance_and_area(train_data: pd.DataFrame, valid_data: 
 
         # 가장 가까운 공원까지의 거리 및 해당 공원의 면적 추가
         nearest_park_distances = distances.flatten()
-        nearest_park_areas = seoul_area_parks.iloc[indices.flatten()]['area'].values  # 면적 정보를 가져옴
 
         data['nearest_park_distance'] = nearest_park_distances
-        data['nearest_park_area'] = nearest_park_areas
         return data
 
     # train, valid, test 데이터에 가장 가까운 공원 거리 및 면적 추가
@@ -164,5 +162,42 @@ def create_school_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFra
     train_data = count_schools_within_radius(train_data, radius)
     valid_data = count_schools_within_radius(valid_data, radius)
     test_data = count_schools_within_radius(test_data, radius)
+
+    return train_data, valid_data, test_data
+
+def create_sum_park_area_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    park_data = Directory.park_info
+
+    # 수도권 공원의 좌표 필터링
+    seoul_area_parks = park_data[(park_data['latitude'] >= 37.0) & (park_data['latitude'] <= 38.0) &
+                                  (park_data['longitude'] >= 126.0) & (park_data['longitude'] <= 128.0)]
+
+    # 수도권 공원의 좌표로 KDTree 생성
+    park_coords = seoul_area_parks[['latitude', 'longitude']].values
+    park_tree = KDTree(park_coords, leaf_size=10)
+
+    def sum_park_area_within_radius(data, radius=0.01):
+        area_sums = []  # 공원 면적 합을 저장할 리스트 초기화
+        for i in range(0, len(data), 10000):  # 10,000개씩 배치로 처리
+            batch = data.iloc[i:i + 10000]
+            house_coords = batch[['latitude', 'longitude']].values
+            indices = park_tree.query_radius(house_coords, r=radius)  # 반경 내의 인덱스 찾기
+            
+            # 각 집에 대해 반경 1km 이내의 공원 면적의 합을 계산
+            for idx in indices:
+                if idx.size > 0:  # 1km 이내에 공원이 있을 경우
+                    areas_sum = seoul_area_parks.iloc[idx]['area'].sum()
+                else:
+                    areas_sum = 0  # 공원이 없는 경우 면적 0
+                area_sums.append(areas_sum)  # 면적 합 추가
+
+        # 결과 추가
+        data['nearest_park_area_sum'] = area_sums
+        return data
+
+    # train, valid, test 데이터에 반경 1km 이내의 공원 면적 합 추가
+    train_data = sum_park_area_within_radius(train_data)
+    valid_data = sum_park_area_within_radius(valid_data)
+    test_data = sum_park_area_within_radius(test_data)
 
     return train_data, valid_data, test_data
