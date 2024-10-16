@@ -36,6 +36,10 @@ def main():
     train_data_ = preprocessing_fn.handle_duplicates(train_data_)
     valid_data_ = preprocessing_fn.handle_duplicates(valid_data_)
 
+    # built_year=2024 제거
+    train_data_ = preprocessing_fn.remove_built_year_2024(train_data_)
+    valid_data_ = preprocessing_fn.remove_built_year_2024(valid_data_)
+
     # 전처리 적용
     train_data_ = preprocessing.time_feature_preprocessing(train_data_)
     valid_data_ = preprocessing.time_feature_preprocessing(valid_data_)
@@ -45,6 +49,13 @@ def main():
     # train_data_ = preprocessing_fn.drop_columns(train_data_, ['contract_day'])
     # valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_day'])
     # test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_day'])
+
+    train_data_ = preprocessing_fn.drop_columns(train_data_, ['age'])
+    valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['age'])
+    test_data_ = preprocessing_fn.drop_columns(test_data_, ['age'])
+    train_data_ = preprocessing_fn.drop_columns(train_data_, ['contract_type'])
+    valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_type'])
+    test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_type'])
 
     # 새로운 피처 추가
     train_data_, valid_data_, test_data_ = features.create_nearest_subway_distance(train_data_, valid_data_, test_data_)

@@ -174,7 +174,7 @@ def creat_area_m2_category(train_data: pd.DataFrame, valid_data: pd.DataFrame, t
         return f"{range_start} - {range_end}"
 
     for dataset in [train_data, valid_data, test_data]:
-        area_dummies = pd.get_dummies(dataset['area_m2'].apply(categorize_area), prefix='area',drop_first=True, dtype=int)
+        area_dummies = pd.get_dummies(dataset['area_m2'].apply(categorize_area), prefix='area',drop_first=True)
         dataset = pd.concat([dataset, area_dummies], axis=1)
 
     return train_data, valid_data, test_data

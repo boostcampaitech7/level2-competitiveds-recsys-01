@@ -1,5 +1,4 @@
 ﻿name,title,hyperparams,MAE score
 lim,"cluster,area_m2","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4485.76782891716
+lim,"cluster,area_m2,drop_2024","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4505.362623963097
 lim,"cluster,area_m2,drop_2024_age_contract_type","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4491.732676942833
-lim,"cluster,area_m2,drop_2024_age_contract_type","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4505.362623963097
-lim,"cluster,area_m2,drop_2024_age_contract_type","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4505.362623963097

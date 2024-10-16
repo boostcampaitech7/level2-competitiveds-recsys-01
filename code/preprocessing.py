@@ -8,7 +8,6 @@ def time_feature_preprocessing(df: pd.DataFrame) -> pd.DataFrame:
     df = create_temporal_feature(df)
     df = create_sin_cos_season(df)
     df = create_floor_area_interaction(df)
-    #df = remove_built_year_2024(df)
     #df = feature_selection(df)
     return df
 
