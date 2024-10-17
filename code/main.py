@@ -17,36 +17,34 @@ def main():
     name : 실험자 이름입니다.
     title : result 폴더에 저장될 실험명을 지정합니다.
     '''
-    name = 'eun'
-    title = 'cluster,timefeature,categorical,drop,gangnam,xgb1000'
+    name = 'lim'
+    title = 'cluster,area_m2,drop_2024_age_contract_type,school,subway'
 
     df = common_utils.merge_data(Directory.train_data, Directory.test_data)
 
     # 클러스터 피처 apply
     for info_df_name in ['subway_info', 'school_info', 'park_info']:
         info_df = getattr(Directory, info_df_name)  
-        df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=20)
+        df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=15)
 
     # 이상치 처리
     print("start to cleaning outliers...")
     df = preprocessing_fn.handle_outliers(df)
     df = df[df['age'] >= 0]
 
-    # 강남역과의 거리 반영
-    df = features.distance_gangnam(df)
+    train_data_, valid_data_, test_data_ = common_utils.train_valid_test_split(df)
     
     # 로그 변환
     #df = preprocessing_fn.log_transform(df, 'deposit')
-
-    # 계약 유형 피처 카테고리 변환
-    df = preprocessing_fn.numeric_to_categoric(df, 'contract_type', {0:'new', 1:'renew', 2:'unknown'})
-
-    train_data_, valid_data_, test_data_ = common_utils.train_valid_test_split(df)
 
     # 중복 제거
     print("start to preprocessing...")
     train_data_ = preprocessing.handle_duplicates(train_data_)
     valid_data_ = preprocessing.handle_duplicates(valid_data_)
+
+    # built_year=2024 제거
+    train_data_ = preprocessing_fn.remove_built_year_2024(train_data_)
+    valid_data_ = preprocessing_fn.remove_built_year_2024(valid_data_)
 
     # 전처리 적용
     train_data_ = features.create_temporal_feature(train_data_)
@@ -71,6 +69,22 @@ def main():
     train_data_ = preprocessing_fn.drop_columns(train_data_, ['contract_day'])
     valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_day'])
     test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_day'])
+    # train_data_ = preprocessing_fn.drop_columns(train_data_, ['contract_day'])
+    # valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_day'])
+    # test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_day'])
+
+    # train_data_ = preprocessing_fn.drop_columns(train_data_, ['age'])
+    # valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['age'])
+    # test_data_ = preprocessing_fn.drop_columns(test_data_, ['age'])
+    # train_data_ = preprocessing_fn.drop_columns(train_data_, ['contract_type'])
+    # valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_type'])
+    # test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_type'])
+
+    # 새로운 피처 추가
+    train_data_, valid_data_, test_data_ = features.creat_area_m2_category(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = features.create_nearest_school_distance(train_data_, valid_data_, test_data_)
+    train_data_, valid_data_, test_data_ = features.weighted_subway_distance(train_data_, valid_data_, test_data_)
+
     # 정규화
     train_data_, valid_data_, test_data_ = preprocessing.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')
 
@@ -93,8 +107,7 @@ def main():
 
     # train with total dataset
     print("Train with total dataset")
-    X_total = common_utils.train_valid_concat(X_train, X_valid)
-    y_total = common_utils.train_valid_concat(y_train, y_valid)
+    X_total, y_total = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
     model_ = model.xgboost(X_total, y_total)
 
     # inference with test data
