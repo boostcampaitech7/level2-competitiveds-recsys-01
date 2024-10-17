@@ -31,10 +31,8 @@ def log_inference(model, type, X, y=None):
     
     if type=='validation':
         prediction = model.predict(X).astype(np.float64)
-        # 로그 변환된 값을 원래 값으로 변환
         prediction = np.exp(prediction)
         
-        # 예측값이 음수이거나 NaN, Inf인지 확인
         if np.any(np.isnan(prediction)):
             raise ValueError("Prediction contains NaN values. Check your model or input data.")
 
@@ -50,7 +48,6 @@ def log_inference(model, type, X, y=None):
         return prediction, mae
 
     prediction = model.predict(X).astype(np.float64)
-    # 로그 변환된 값을 원래 값으로 변환
     prediction = np.exp(prediction)
     sample_submission = Directory.sample_submission
     sample_submission['deposit'] = prediction
