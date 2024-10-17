@@ -50,12 +50,12 @@ def main():
     # valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_day'])
     # test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_day'])
 
-    train_data_ = preprocessing_fn.drop_columns(train_data_, ['age'])
-    valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['age'])
-    test_data_ = preprocessing_fn.drop_columns(test_data_, ['age'])
-    train_data_ = preprocessing_fn.drop_columns(train_data_, ['contract_type'])
-    valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_type'])
-    test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_type'])
+    # train_data_ = preprocessing_fn.drop_columns(train_data_, ['age'])
+    # valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['age'])
+    # test_data_ = preprocessing_fn.drop_columns(test_data_, ['age'])
+    # train_data_ = preprocessing_fn.drop_columns(train_data_, ['contract_type'])
+    # valid_data_ = preprocessing_fn.drop_columns(valid_data_, ['contract_type'])
+    # test_data_ = preprocessing_fn.drop_columns(test_data_, ['contract_type'])
 
     # 새로운 피처 추가
     #train_data_, valid_data_, test_data_ = features.create_nearest_subway_distance(train_data_, valid_data_, test_data_)
