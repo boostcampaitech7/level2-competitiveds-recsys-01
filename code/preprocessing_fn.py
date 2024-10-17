@@ -49,6 +49,9 @@ def create_floor_area_interaction(df: pd.DataFrame)-> pd.DataFrame:
     df_preprocessed['floor_area_interaction'] = df_preprocessed['floor'] * df_preprocessed['area_m2']
     return df_preprocessed
 
+def remove_built_year_2024(df: pd.DataFrame) -> pd.DataFrame:
+    df_filtered = df[df['built_year'] != 2024]
+    return df_filtered
 
 def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.DataFrame, test_data_scaled: pd.DataFrame)-> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     drop_columns = ['type', 'season', 'date']

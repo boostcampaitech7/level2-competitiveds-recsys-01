@@ -100,7 +100,7 @@ def transaction_count_function(train_data: pd.DataFrame, valid_data: pd.DataFram
             # 동일한 아파트에서의 거래량 계산
             transaction_count = group[
                 (group['date'] < end_date) &  # 현재 거래일 이전
-                (group['date'] >= start_date)  # month 이전 
+                (group['date'] >= start_date)  # month 이전
                 ].shape[0]
 
             # 거래량 리스트에 추가
@@ -122,7 +122,7 @@ def transaction_count_function(train_data: pd.DataFrame, valid_data: pd.DataFram
 def clustering(total_df, info_df, feat_name, n_clusters=20):
     info = info_df[['longitude', 'latitude']].values
     
-    kmeans = KMeans(n_clusters=20, init='k-means++', max_iter=300, n_init=10, random_state=Config.RANDOM_SEED)
+    kmeans = KMeans(n_clusters=10, init='k-means++', max_iter=300, n_init=10, random_state=Config.RANDOM_SEED)
     kmeans.fit(info)
     
     clusters = kmeans.predict(total_df[['longitude', 'latitude']].values)
@@ -228,7 +228,7 @@ def create_subway_within_radius(train_data: pd.DataFrame, valid_data: pd.DataFra
         return data
 
     # 각 데이터셋에 대해 거리 추가
-    radius = 0.01  # 약 1km
+    radius = 0.01  # ?�� 1km
     train_data = count_subways_within_radius(train_data, radius)
     valid_data = count_subways_within_radius(valid_data, radius)
     test_data = count_subways_within_radius(test_data, radius)
@@ -383,6 +383,37 @@ def create_school_counts_within_radius_by_school_level(train_data: pd.DataFrame,
     return train_data, valid_data, test_data
 
 
+def create_nearest_park_distance_and_area(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    park_data = Directory.park_info
+
+    seoul_area_parks = park_data[(park_data['latitude'] >= 37.0) & (park_data['latitude'] <= 38.0) &
+                                (park_data['longitude'] >= 126.0) & (park_data['longitude'] <= 128.0)]
+
+    # 수도권 공원의 좌표로 KDTree 생성
+    park_coords = seoul_area_parks[['latitude', 'longitude']].values
+    park_tree = KDTree(park_coords, leaf_size=10)
+
+    def add_nearest_park_features(data):
+        # 각 집의 좌표로 가장 가까운 공원 찾기
+        house_coords = data[['latitude', 'longitude']].values
+        distances, indices = park_tree.query(house_coords, k=1)  # 가장 가까운 공원 찾기
+
+        # 가장 가까운 공원까지의 거리 및 해당 공원의 면적 추가
+        nearest_park_distances = distances.flatten()
+        nearest_park_areas = seoul_area_parks.iloc[indices.flatten()]['area'].values  # 면적 정보를 가져옴
+
+        data['nearest_park_distance'] = nearest_park_distances
+        data['nearest_park_area'] = nearest_park_areas
+        return data
+
+    # train, valid, test 데이터에 가장 가까운 공원 거리 및 면적 추가
+    train_data = add_nearest_park_features(train_data)
+    valid_data = add_nearest_park_features(valid_data)
+    test_data = add_nearest_park_features(test_data)
+
+    return train_data, valid_data, test_data
+
+    
 def distance_gangnam(df):
     gangnam = (37.498095, 127.028361548)
 
@@ -457,39 +488,6 @@ def create_floor_area_interaction(train_data: pd.DataFrame, valid_data: pd.DataF
     test_data = floor_weighted(test_data)
 
     return train_data, valid_data, test_data
-
-
-
-def create_nearest_park_distance_and_area(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    park_data = Directory.park_info
-
-    seoul_area_parks = park_data[(park_data['latitude'] >= 37.0) & (park_data['latitude'] <= 38.0) &
-                                (park_data['longitude'] >= 126.0) & (park_data['longitude'] <= 128.0)]
-
-    # 수도권 공원의 좌표로 KDTree 생성
-    park_coords = seoul_area_parks[['latitude', 'longitude']].values
-    park_tree = KDTree(park_coords, leaf_size=10)
-
-    def add_nearest_park_features(data):
-        # 각 집의 좌표로 가장 가까운 공원 찾기
-        house_coords = data[['latitude', 'longitude']].values
-        distances, indices = park_tree.query(house_coords, k=1)  # 가장 가까운 공원 찾기
-
-        # 가장 가까운 공원까지의 거리 및 해당 공원의 면적 추가
-        nearest_park_distances = distances.flatten()
-        nearest_park_areas = seoul_area_parks.iloc[indices.flatten()]['area'].values  # 면적 정보를 가져옴
-
-        data['nearest_park_distance'] = nearest_park_distances
-        data['nearest_park_area'] = nearest_park_areas
-        return data
-
-    # train, valid, test 데이터에 가장 가까운 공원 거리 및 면적 추가
-    train_data = add_nearest_park_features(train_data)
-    valid_data = add_nearest_park_features(valid_data)
-    test_data = add_nearest_park_features(test_data)
-
-    return train_data, valid_data, test_data
-
 
 
 def assign_info_cluster(train_data, school_info, park_info, subway_info):
@@ -665,4 +663,90 @@ def categorization(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data
             valid_data.drop(columns=['area_m2'], inplace=True)
             test_data.drop(columns=['area_m2'], inplace=True)
             
+    return train_data, valid_data, test_data
+
+def creat_area_m2_category(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def categorize_area(x):
+        range_start = (x // 50) * 50
+        range_end = range_start + 49
+        return f"{range_start} - {range_end}"
+
+    for dataset in [train_data, valid_data, test_data]:
+        area_dummies = pd.get_dummies(dataset['area_m2'].apply(categorize_area), prefix='area',drop_first=True)
+        dataset = pd.concat([dataset, area_dummies], axis=1)
+
+    return train_data, valid_data, test_data
+
+#level별 가장 가까운 학교까지 거리
+def create_nearest_school_distance(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    school_info = Directory.school_info
+    seoul_area_school = school_info[(school_info['latitude'] >= 37.0) & (school_info['latitude'] <= 38.0) &
+                                (school_info['longitude'] >= 126.0) & (school_info['longitude'] <= 128.0)]
+
+    elementary_schools = seoul_area_school[seoul_area_school['schoolLevel'] == 'elementary']
+    middle_schools = seoul_area_school[seoul_area_school['schoolLevel'] == 'middle']
+    high_schools = seoul_area_school[seoul_area_school['schoolLevel'] == 'high']
+
+    # 각 학교 유형에 대해 BallTree 생성
+    elementary_tree = BallTree(np.radians(elementary_schools[['latitude', 'longitude']]), metric='haversine')
+    middle_tree = BallTree(np.radians(middle_schools[['latitude', 'longitude']]), metric='haversine')
+    high_tree = BallTree(np.radians(high_schools[['latitude', 'longitude']]), metric='haversine')
+
+    # 거리 계산 함수 정의
+    def add_nearest_school_distance(data):
+        unique_coords = data[['latitude', 'longitude']].drop_duplicates().reset_index(drop=True)
+        house_coords = np.radians(unique_coords.values)
+
+        # 가장 가까운 학교까지의 거리 계산 (미터 단위로 변환)
+        unique_coords['nearest_elementary_distance'] = elementary_tree.query(house_coords, k=1)[0].flatten() * 6371000
+        unique_coords['nearest_middle_distance'] = middle_tree.query(house_coords, k=1)[0].flatten() * 6371000
+        unique_coords['nearest_high_distance'] = high_tree.query(house_coords, k=1)[0].flatten() * 6371000
+
+        data = data.merge(unique_coords, on=['latitude', 'longitude'], how='left')
+
+        return data
+
+    # 훈련 데이터에 거리 추가
+    train_data = add_nearest_school_distance(train_data)
+    valid_data = add_nearest_school_distance(valid_data)
+    test_data = add_nearest_school_distance(test_data)
+
+    return train_data, valid_data, test_data
+
+def weighted_subway_distance(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    subwayInfo = Directory.subway_info
+
+    # 환승역 가중치 부여
+    duplicate_stations = subwayInfo.groupby(['latitude', 'longitude']).size().reset_index(name='counts')
+    transfer_stations = duplicate_stations[duplicate_stations['counts'] > 1]
+
+    subwayInfo = subwayInfo.merge(transfer_stations[['latitude', 'longitude', 'counts']], 
+                                  on=['latitude', 'longitude'], 
+                                  how='left')
+    subwayInfo['weight'] = subwayInfo['counts'].fillna(1)  # 환승역은 가중치 > 1, 나머지는 1
+
+    subway_tree = BallTree(np.radians(subwayInfo[['latitude', 'longitude']]), metric='haversine')
+
+    # 거리 계산 함수 정의
+    def add_weighted_subway_distance(data):
+        unique_coords = data[['latitude', 'longitude']].drop_duplicates().reset_index(drop=True)
+        house_coords = np.radians(unique_coords.values)
+
+        distances, indices = subway_tree.query(house_coords, k=1)
+        unique_coords['nearest_subway_distance'] = distances.flatten() * 6371000 
+
+        weights = subwayInfo.iloc[indices.flatten()]['weight'].values
+
+        # 거리를 가중치로 나누기
+        unique_coords['nearest_subway_distance'] /= weights  
+
+        data = data.merge(unique_coords, on=['latitude', 'longitude'], how='left')
+
+        return data
+
+    # 각 데이터셋에 대해 거리 추가
+    train_data = add_weighted_subway_distance(train_data)
+    valid_data = add_weighted_subway_distance(valid_data)
+    test_data = add_weighted_subway_distance(test_data)
+
     return train_data, valid_data, test_data

@@ -40,7 +40,6 @@ def log_inference(model, type, X, y=None):
             raise ValueError("Prediction contains Inf values. This may be due to numerical instability in the model.")
 
         if np.any(prediction <= 0):
-            # 0 또는 음수 값이 발견된 경우에 대한 경고 및 처치
             zero_indices = np.where(prediction <= 0)[0]
             raise ValueError(f"Prediction contains zero or negative values at indices: {zero_indices}. Clipping these values to avoid issues.")
         
