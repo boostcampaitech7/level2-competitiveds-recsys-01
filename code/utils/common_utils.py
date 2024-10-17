@@ -5,7 +5,7 @@ import numpy as np
 
 from utils.constant_utils import Directory, Config
 
-# ?°?´?„° ë³‘í•© ?•¨?ˆ˜
+# ë°ì´í„° ë³‘í•© í•¨ìˆ˜
 def merge_data(train_data, test_data):
     train_data['type'] = 'train'
     test_data['type'] = 'test'
@@ -15,16 +15,16 @@ def merge_data(train_data, test_data):
 
     interest_rate = Directory.interest_rate.rename(columns = {'year_month' : 'contract_year_month'})
 
-    # 202406 ?°?´?„° 202405 ê°’ìœ¼ë¡? ì¶”ê??
+    # 202406 ë°ì´í„° 202405 ê°’ìœ¼ë¡œ ì¶”ê°€
     interest_rate.loc[len(interest_rate)] = [202406, 3.56]
     interest_rate['contract_year_month'] = interest_rate['contract_year_month'].astype(int)
     df = df.merge(interest_rate, on='contract_year_month', how='left')
     return df
 
 
-# ?°?´?„° ë¶„í•  ?•¨?ˆ˜
+# ë°ì´í„° ë¶„í•  í•¨ìˆ˜
 def train_valid_test_split(df, log_transform: str = None):
-    # ?°?´?„° ë¶„í• 
+    # ë°ì´í„° ë¶„í• 
     train_data = df[df['type'] == 'train']
     test_data = df[df['type'] == 'test']
 
@@ -34,7 +34,7 @@ def train_valid_test_split(df, log_transform: str = None):
     valid_data = train_data[(train_data['contract_year_month'] >= valid_start) & (train_data['contract_year_month'] <= valid_end)]
     train_data = train_data[~((train_data['contract_year_month'] >= valid_start) & (train_data['contract_year_month'] <= valid_end))]
 
-    # log ë³??™˜
+    # log ë³€í™˜
     if log_transform == 'log':
         train_data['deposit'] = np.log1p(train_data['deposit'])
         valid_data['deposit'] = np.log1p(valid_data['deposit'])
@@ -42,7 +42,7 @@ def train_valid_test_split(df, log_transform: str = None):
     return train_data, valid_data, test_data
 
 
-# target ë¶„ë¦¬ ?•¨?ˆ˜
+# target ë¶„ë¦¬ í•¨ìˆ˜
 def split_feature_target(train_data_scaled, valid_data_scaled, test_data_scaled):
     X_train = train_data_scaled.drop(columns=['deposit'])
     y_train = train_data_scaled['deposit']
@@ -53,7 +53,7 @@ def split_feature_target(train_data_scaled, valid_data_scaled, test_data_scaled)
     return X_train, y_train, X_valid, y_valid, X_test
 
 
-# trainê³? valid ë³‘í•© ?•¨?ˆ˜(total dataset êµ¬ì¶•)
+# trainê³¼ valid ë³‘í•© í•¨ìˆ˜(total dataset êµ¬ì¶•)
 def train_valid_concat(X_train, X_valid, y_train, y_valid):
     X_total, y_total = pd.concat([X_train, X_valid]), pd.concat([y_train, y_valid])
     return X_total, y_total
@@ -62,7 +62,7 @@ def train_valid_concat(X_train, X_valid, y_train, y_valid):
 
 
 
-# submission ????ž¥ ?•¨?ˆ˜
+# submission ì €ìž¥ í•¨ìˆ˜
 def submission_to_csv(submit_df, file_name):
     submission_path = os.path.join(Directory.result_path, "submission")
     os.makedirs(submission_path, exist_ok=True)
@@ -73,9 +73,9 @@ def submission_to_csv(submit_df, file_name):
     submit_df.to_csv(submission_file_path, index=False, encoding='utf-8-sig')
 
 '''
-name : ?‹¤?—˜ ì§„í–‰?ž
-title : ?‹¤?—˜ êµ¬ì„±?š”?†Œ (ëª¨ë¸ëª?, ?”¼ì²˜ë“¤)
-hyperparams : ?•˜?´?¼?ŒŒ?¼ë¯¸í„° êµ¬ì„±
+name : ì‹¤í—˜ ì§„í–‰ìž
+title : ì‹¤í—˜ êµ¬ì„±ìš”ì†Œ (ëª¨ë¸ëª…, í”¼ì²˜ë“¤)
+hyperparams : í•˜ì´í¼íŒŒë¼ë¯¸í„° êµ¬ì„±
 MAE score : MAE score
 '''
 def mae_to_csv(name, title, hyperparams, mae):
@@ -95,7 +95,7 @@ def mae_to_csv(name, title, hyperparams, mae):
     
 # saving data and load function
 def save_and_load_function(data: list, file_name: str, mode: str) -> list:
-    # ????ž¥ ê²½ë¡œ
+    # ì €ìž¥ ê²½ë¡œ
     save_path = os.path.join(Directory.root_path, "level2-competitiveds-recsys-01/data/transaction_data", file_name + ".txt")
     
     # save ëª¨ë“œ

@@ -31,10 +31,10 @@ def log_inference(model, type, X, y=None):
     
     if type=='validation':
         prediction = model.predict(X).astype(np.float64)
-        # ë¡œê·¸ ë³€í™˜ëœ ê°’ì„ ì›ë˜ ê°’ìœ¼ë¡œ ë³€í™˜
+        # ·Î±× º¯È¯µÈ °ªÀ» ¿ø·¡ °ªÀ¸·Î º¯È¯
         prediction = np.exp(prediction)
         
-        # ì˜ˆì¸¡ê°’ì´ ìŒìˆ˜ì´ê±°ë‚˜ NaN, Infì¸ì§€ í™•ì¸
+        # ¿¹Ãø°ªÀÌ À½¼öÀÌ°Å³ª NaN, InfÀÎÁö È®ÀÎ
         if np.any(np.isnan(prediction)):
             raise ValueError("Prediction contains NaN values. Check your model or input data.")
 
@@ -42,7 +42,7 @@ def log_inference(model, type, X, y=None):
             raise ValueError("Prediction contains Inf values. This may be due to numerical instability in the model.")
 
         if np.any(prediction <= 0):
-            # 0 ë˜ëŠ” ìŒìˆ˜ ê°’ì´ ë°œê²¬ëœ ê²½ìš°ì— ëŒ€í•œ ê²½ê³  ë° ì²˜ì¹˜
+            # 0 ¶Ç´Â À½¼ö °ªÀÌ ¹ß°ßµÈ °æ¿ì¿¡ ´ëÇÑ °æ°í ¹× Ã³Ä¡
             zero_indices = np.where(prediction <= 0)[0]
             raise ValueError(f"Prediction contains zero or negative values at indices: {zero_indices}. Clipping these values to avoid issues.")
         
@@ -50,7 +50,7 @@ def log_inference(model, type, X, y=None):
         return prediction, mae
 
     prediction = model.predict(X).astype(np.float64)
-    # ë¡œê·¸ ë³€í™˜ëœ ê°’ì„ ì›ë˜ ê°’ìœ¼ë¡œ ë³€í™˜
+    # ·Î±× º¯È¯µÈ °ªÀ» ¿ø·¡ °ªÀ¸·Î º¯È¯
     prediction = np.exp(prediction)
     sample_submission = Directory.sample_submission
     sample_submission['deposit'] = prediction

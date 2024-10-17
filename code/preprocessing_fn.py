@@ -126,9 +126,9 @@ def log_transform(df, column):
     df.loc[df[column] < 0, column] = -np.log(abs(df[column][df[column] < 0])).astype(float)
     return df
 
-# def numeric_to_categoric(df, column, map_dict):
-#     df[column] = df[column].map(map_dict).astype('category')
-#     return df
+def numeric_to_categoric(df, column, map_dict):
+    df[column] = df[column].map(map_dict).astype('category')
+    return df
 
 # 리스트 형태로 전달할 것
 def drop_columns(df, columns):

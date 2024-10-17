@@ -17,20 +17,26 @@ def main():
     name : 실험자 이름입니다.
     title : result 폴더에 저장될 실험명을 지정합니다.
     '''
-    name = 'lim'
-    title = 'cluster,area_m2,drop_2024_age_contract_type,school,subway'
+    name = 'eun'
+    title = 'cluster,timefeature,categorical,drop,gangnam,xgb1000'
 
     df = common_utils.merge_data(Directory.train_data, Directory.test_data)
 
     # 클러스터 피처 apply
     for info_df_name in ['subway_info', 'school_info', 'park_info']:
         info_df = getattr(Directory, info_df_name)  
-        df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=15)
+        df = features.clustering(df, info_df, feat_name=info_df_name, n_clusters=20)
 
     # 이상치 처리
     print("start to cleaning outliers...")
     df = preprocessing_fn.handle_outliers(df)
     df = df[df['age'] >= 0]
+
+    # 강남역과의 거리 반영
+    df = features.distance_gangnam(df)
+
+    # 계약 유형 피처 카테고리 변환
+    df = preprocessing_fn.numeric_to_categoric(df, 'contract_type', {0:'new', 1:'renew', 2:'unknown'})
 
     train_data_, valid_data_, test_data_ = common_utils.train_valid_test_split(df)
     
@@ -107,7 +113,8 @@ def main():
 
     # train with total dataset
     print("Train with total dataset")
-    X_total, y_total = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
+    X_total = common_utils.train_valid_concat(X_train, X_valid)
+    y_total = common_utils.train_valid_concat(y_train, y_valid)
     model_ = model.xgboost(X_total, y_total)
 
     # inference with test data

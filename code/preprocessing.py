@@ -47,18 +47,18 @@ def handle_outliers(total_df):
     iqr_weight = iqr * weight
 
     lowest_val = Q1 - iqr_weight
-    # ìµœì†Ÿê°’
+    # ÃÖ¼Ú°ª
     highest_val = Q3 + iqr_weight
-    # ìµœëŒ“ê°’
+    # ÃÖ´ñ°ª
 
     low_outlier_index = deposit[(deposit < lowest_val)].index
     high_outlier_index = deposit[(deposit > highest_val)].index
 
-    # ìµœì†Ÿê°’ë³´ë‹¤ ì‘ê³ , ìµœëŒ“ê°’ë³´ë‹¤ í° ì´ìƒì¹˜ ë°ì´í„°ë“¤ì˜ ì¸ë±ìŠ¤
+    # ÃÖ¼Ú°ªº¸´Ù ÀÛ°í, ÃÖ´ñ°ªº¸´Ù Å« ÀÌ»óÄ¡ µ¥ÀÌÅÍµéÀÇ ÀÎµ¦½º
     new_df.loc[low_outlier_index,'deposit'] = lowest_val
     new_df.loc[high_outlier_index,'deposit'] = highest_val
 
-    # ì „ì²´ ë°ì´í„°ì—ì„œ ì´ìƒì¹˜ ë°ì´í„° ì œê±°
+    # ÀüÃ¼ µ¥ÀÌÅÍ¿¡¼­ ÀÌ»óÄ¡ µ¥ÀÌÅÍ Á¦°Å
     new_df.reset_index(drop = True, inplace = True)
 
     return new_df
