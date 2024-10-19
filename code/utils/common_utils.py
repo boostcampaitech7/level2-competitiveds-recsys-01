@@ -33,7 +33,12 @@ def train_valid_test_split(df, log_transform: str = None):
 
     valid_data = train_data[(train_data['contract_year_month'] >= valid_start) & (train_data['contract_year_month'] <= valid_end)]
     train_data = train_data[~((train_data['contract_year_month'] >= valid_start) & (train_data['contract_year_month'] <= valid_end))]
-
+    
+    # 인덱스 정리
+    train_data.reset_index(drop=True, inplace=True)
+    valid_data.reset_index(drop=True, inplace=True)
+    test_data.reset_index(drop=True, inplace=True)
+    
     # log 변환
     if log_transform == 'log':
         train_data['deposit'] = np.log1p(train_data['deposit'])
