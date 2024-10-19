@@ -62,6 +62,7 @@ class GridDataset(Dataset):
     def __init__(self, mode="train"):
         self.mode = mode
         total_df = common_utils.merge_data(Directory.train_data, Directory.test_data)
+        total_df = preprocessing.handle_age_outliers(total_df)
         
         lat_bins = np.linspace(total_df['latitude'].min(), total_df['latitude'].max(), 43)
         long_bins = np.linspace(total_df['longitude'].min(), total_df['longitude'].max(), 28)
@@ -70,13 +71,22 @@ class GridDataset(Dataset):
         total_df['long_bin'] = np.digitize(total_df['longitude'], long_bins)
 
         train_data_, valid_data_, test_data_ = common_utils.train_valid_test_split(total_df)
+
+        # 중복 행 제거
+        train_data_ = preprocessing.handle_duplicates(train_data_)
+        valid_data_ = preprocessing.handle_duplicates(valid_data_)
         
+        train_data_.reset_index(drop=True, inplace=True)
+        valid_data_.reset_index(drop=True, inplace=True)
+        test_data_.reset_index(drop=True, inplace=True)
+
         grid = torch.zeros(len(lat_bins), len(long_bins))
 
         if self.mode=="train":
             X = torch.stack([grid]*len(train_data_))
             y = torch.tensor(train_data_['deposit'].values)
-            
+            print(f"X.shape: {X.shape}, train_data_ length: {len(train_data_)}")
+    
             for i, data in tqdm(train_data_.iterrows()):
                 # 아파트 위치의 bin이 1부터 시작해서 -1 해준다.
                 lat_bin, long_bin = data['lat_bin']-1, data['long_bin']-1
@@ -163,11 +173,6 @@ class MLPDataset(Dataset):
 
         # other_features
         print("create other features")
-        # train_data, valid_data, test_data = create_temporal_feature(train_data, valid_data, test_data)
-        # train_data, valid_data, test_data = create_sin_cos_season(train_data, valid_data, test_data)
-        # train_data, valid_data, test_data = create_floor_area_interaction(train_data, valid_data, test_data)
-        # train_data, valid_data, test_data = create_sum_park_area_within_radius(train_data, valid_data, test_data)
-        # train_data, valid_data, test_data = shift_interest_rate_function(train_data, valid_data, test_data)
         train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'age')
         train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'floor')
         train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'area_m2')
@@ -177,10 +182,10 @@ class MLPDataset(Dataset):
         print("create count features")
         train_data, valid_data, test_data = transaction_count_function(train_data, valid_data, test_data)
         # 위의 함수를 바로 실행하기 위한 구조 : data/transaction_data에 train/valid/test_transaction_{month}.txt 구조의 파일이 있어야함
-        # train_data, valid_data, test_data = create_subway_within_radius(train_data, valid_data, test_data)
-        # train_data, valid_data, test_data = create_school_within_radius(train_data, valid_data, test_data)
-        # train_data, valid_data, test_data = create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
-        # train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
+        train_data, valid_data, test_data = create_subway_within_radius(train_data, valid_data, test_data)
+        train_data, valid_data, test_data = create_school_within_radius(train_data, valid_data, test_data)
+        train_data, valid_data, test_data = create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
+        train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
 
 
 
@@ -199,13 +204,10 @@ class MLPDataset(Dataset):
         train_data_, valid_data_, test_data_ = preprocessing.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')
 
         # feature selection
-        #train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing.feature_selection(train_data_, valid_data_, test_data_)
+        # train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing.feature_selection(train_data_, valid_data_, test_data_)
 
-       
-        
         # feature split
         X_train, y_train, X_valid, y_valid, X_test = common_utils.split_feature_target(train_data_, valid_data_, test_data_)
-        print(X_train.info())
 
         if mode=='train':
             self.X = torch.tensor(X_train.values, dtype=torch.float32).unsqueeze(1)
@@ -227,6 +229,7 @@ class MLPDataset(Dataset):
 
 class CombinedDataset(Dataset):
     def __init__(self, mode='train'):
+        self.mode = mode
         self.cnn = GridDataset(mode)
         self.mlp = MLPDataset(mode)
 
@@ -234,7 +237,7 @@ class CombinedDataset(Dataset):
         return len(self.cnn)
     
     def __getitem__(self, idx):
-        if mode == 'train' or mode=='valid':
+        if self.mode == 'train' or self.mode=='valid':
             X_cnn, y = self.cnn[idx]
             X_mlp, y = self.mlp[idx]
             return (X_cnn,X_mlp, y)
