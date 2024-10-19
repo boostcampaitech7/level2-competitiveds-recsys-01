@@ -22,21 +22,21 @@ def main():
     name : 실험자 이름입니다.
     title : result 폴더에 저장될 실험명을 지정합니다.
     '''
-    name = 'eun'
-    title = 'cluster,timefeature,categorical,drop,gangnam,xgb1000'
+    name = 'lim'
+    title = 'optuna30'
 
     print("total data load ...")
     df = common_utils.merge_data(Directory.train_data, Directory.test_data)
 
     ### 클러스터 피처 apply
     print("clustering apply ...")
-    for info_df_name in ['subway_info', 'school_info', 'park_info']:
+    for info_df_name in ['subway_info']: #'school_info', 'park_info']:
         info_df = getattr(Directory, info_df_name)  
         df = clustering(df, info_df, feat_name=info_df_name, n_clusters=20)
 
     ### 이상치 처리
-    print("start to cleaning outliers...")
-    df = preprocessing.handle_age_outliers(df)
+    #print("start to cleaning outliers...")
+    #df = preprocessing.handle_age_outliers(df)
 
     ### 데이터 분할
     print("train, valid, test split for preprocessing & feature engineering ...")
@@ -68,31 +68,30 @@ def main():
     print("create distance features")
     train_data, valid_data, test_data = distance_gangnam(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_nearest_subway_distance(train_data, valid_data, test_data)
-    train_data, valid_data, test_data = create_nearest_park_distance_and_area(train_data, valid_data, test_data)
-    train_data, valid_data, test_data = create_nearest_school_distance(train_data, valid_data, test_data)
+    #train_data, valid_data, test_data = create_nearest_park_distance_and_area(train_data, valid_data, test_data)
+    #train_data, valid_data, test_data = create_nearest_school_distance(train_data, valid_data, test_data)
     train_data, valid_data, test_data = weighted_subway_distance(train_data, valid_data, test_data)
-    train_data, valid_data, test_data = create_nearest_park_distance_and_area(train_data, valid_data, test_data)
 
     # other_features
     print("create other features")
-    train_data, valid_data, test_data = create_temporal_feature(train_data, valid_data, test_data)
-    train_data, valid_data, test_data = create_sin_cos_season(train_data, valid_data, test_data)
+    #train_data, valid_data, test_data = create_temporal_feature(train_data, valid_data, test_data)
+    #train_data, valid_data, test_data = create_sin_cos_season(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_floor_area_interaction(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_sum_park_area_within_radius(train_data, valid_data, test_data)
-    train_data, valid_data, test_data = shift_interest_rate_function(train_data, valid_data, test_data)
-    train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'age')
-    train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'floor')
-    train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'area_m2')
+    #train_data, valid_data, test_data = shift_interest_rate_function(train_data, valid_data, test_data)
+    #train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'age')
+    #train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'floor')
+    #train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'area_m2')
 
     
     # count_features
     print("create count features")
-    train_data, valid_data, test_data = transaction_count_function(train_data, valid_data, test_data)
+    #train_data, valid_data, test_data = transaction_count_function(train_data, valid_data, test_data)
     # 위의 함수를 바로 실행하기 위한 구조 : data/transaction_data에 train/valid/test_transaction_{month}.txt 구조의 파일이 있어야함
     train_data, valid_data, test_data = create_subway_within_radius(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_school_within_radius(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
-    train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
+    #train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
     
     
     
@@ -100,6 +99,12 @@ def main():
     train_data_ = preprocessing.drop_columns(train_data, ['contract_day'])
     valid_data_ = preprocessing.drop_columns(valid_data, ['contract_day'])
     test_data_ = preprocessing.drop_columns(test_data, ['contract_day'])
+    train_data_ = preprocessing.drop_columns(train_data, ['age'])
+    valid_data_ = preprocessing.drop_columns(valid_data, ['age'])
+    test_data_ = preprocessing.drop_columns(test_data, ['age'])
+    train_data_ = preprocessing.drop_columns(train_data, ['floor'])
+    valid_data_ = preprocessing.drop_columns(valid_data, ['floor'])
+    test_data_ = preprocessing.drop_columns(test_data, ['floor'])
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 # 여기 아래서부터 자유롭게 시도(drop columns를 제외하면 대략 52개 column정도 있음)   
@@ -121,7 +126,7 @@ def main():
     prediction, mae = inference(model_, 'validation', X_valid, y_valid)
 
     # record MAE score as csv
-    hyperparams = "learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED"
+    hyperparams = "Optuna30"
     common_utils.mae_to_csv(name, title, hyperparams=hyperparams, mae = mae)
 
     # train with total dataset
@@ -133,7 +138,7 @@ def main():
     submission = inference(model_, 'submission', X_test)
 
     # save sample submission
-    common_utils.submission_to_csv(submission, 'test_all_columns+xgboost')
+    common_utils.submission_to_csv(submission, 'Optuna30')
 
     print("Successfully executed main.py.")
     return prediction, mae

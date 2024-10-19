@@ -12,7 +12,7 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler, M
 
 ### 변수 유형별 변환
 def feature_selection(train_data_scaled: pd.DataFrame, valid_data_scaled: pd.DataFrame, test_data_scaled: pd.DataFrame)-> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    drop_columns = ['type', 'season', 'date']
+    drop_columns = ['type'] #'season', 'date']
     train_data_scaled.drop(drop_columns, axis = 1, inplace = True)
     valid_data_scaled.drop(drop_columns, axis = 1, inplace = True)
     test_data_scaled.drop(drop_columns + ['deposit'], axis = 1, inplace = True)

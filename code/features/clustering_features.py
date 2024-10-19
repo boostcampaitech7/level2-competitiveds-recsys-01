@@ -7,7 +7,7 @@ import os
 from sklearn.neighbors import KDTree
 from sklearn.cluster import KMeans
 
-from geopy.distance import great_circle
+#from geopy.distance import great_circle
 
 
 
@@ -66,7 +66,7 @@ def create_clustering_target(train_data: pd.DataFrame, valid_data: pd.DataFrame,
     test_data['cluster'] = test_data['cluster'].astype('category')
 
     # 군집 밀도 변수 추가
-    train_data, valid_data, test_data = create_cluster_density(train_data, valid_data, test_data)
+    #train_data, valid_data, test_data = create_cluster_density(train_data, valid_data, test_data)
 
     centroids = kmeans.cluster_centers_
 

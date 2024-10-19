@@ -7,7 +7,7 @@ import os
 from sklearn.neighbors import KDTree
 from sklearn.cluster import KMeans
 
-from geopy.distance import great_circle
+#from geopy.distance import great_circle
 
 
 
