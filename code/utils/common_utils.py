@@ -94,23 +94,30 @@ def mae_to_csv(name, title, hyperparams, mae):
     
     
 # saving data and load function
-def save_and_load_function(data: list, file_name: str, mode: str) -> list:
+def save_and_load_function(file_name: str, mode: str, path : str, extention : str, data: list = None) -> list:
     # 저장 경로
-    save_path = os.path.join(Directory.root_path, "level2-competitiveds-recsys-01/data/transaction_data", file_name + ".txt")
+    
+    save_path = os.path.join(Directory.root_path, f"{path}", file_name + f".{extention}")
     
     # save 모드
     if mode == 'save':
-        with open(save_path, 'w') as f:
-            for item in data:
-                f.write(f"{item}\n") 
+        if extention == 'csv':
+           data.to_csv(save_path, index=False)
+        else:
+            with open(save_path, 'w') as f:
+                for item in data:
+                    f.write(f"{item}\n") 
     
     # load 모드
     elif mode == 'load':
         loaded_data = []
         if os.path.exists(save_path):
-            with open(save_path, 'r') as f:
-                loaded_data = f.read().splitlines()  
+            if extention == 'csv':
+                loaded_data = pd.read_csv(save_path)
+            else:
+                with open(save_path, 'r') as f:
+                    loaded_data = f.read().splitlines()  
         return loaded_data
     
     else:
-        raise ValueError("mode should be either 'save' or 'load'") 
+        raise ValueError("mode should be either 'save' or 'load'")

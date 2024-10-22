@@ -68,30 +68,30 @@ def main():
     print("create distance features")
     train_data, valid_data, test_data = distance_gangnam(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_nearest_subway_distance(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = create_nearest_park_distance_and_area(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = create_nearest_school_distance(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = create_nearest_park_distance_and_area(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = create_nearest_school_distance(train_data, valid_data, test_data)
     train_data, valid_data, test_data = weighted_subway_distance(train_data, valid_data, test_data)
 
     # other_features
     print("create other features")
-    #train_data, valid_data, test_data = create_temporal_feature(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = create_sin_cos_season(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = create_temporal_feature(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = create_sin_cos_season(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_floor_area_interaction(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_sum_park_area_within_radius(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = shift_interest_rate_function(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'age')
-    #train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'floor')
-    #train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'area_m2')
+    train_data, valid_data, test_data = shift_interest_rate_function(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'age')
+    train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'floor')
+    train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'area_m2')
 
     
     # count_features
     print("create count features")
-    #train_data, valid_data, test_data = transaction_count_function(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = transaction_count_function(train_data, valid_data, test_data)
     # 위의 함수를 바로 실행하기 위한 구조 : data/transaction_data에 train/valid/test_transaction_{month}.txt 구조의 파일이 있어야함
     train_data, valid_data, test_data = create_subway_within_radius(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_school_within_radius(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
     
     
     
@@ -102,13 +102,12 @@ def main():
     train_data_ = preprocessing.drop_columns(train_data, ['age'])
     valid_data_ = preprocessing.drop_columns(valid_data, ['age'])
     test_data_ = preprocessing.drop_columns(test_data, ['age'])
-    train_data_ = preprocessing.drop_columns(train_data, ['floor'])
-    valid_data_ = preprocessing.drop_columns(valid_data, ['floor'])
-    test_data_ = preprocessing.drop_columns(test_data, ['floor'])
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 # 여기 아래서부터 자유롭게 시도(drop columns를 제외하면 대략 52개 column정도 있음)   
-    
+    train_data_ = preprocessing.log_transform(train_data_, ['deposit'])
+    valid_data_ = preprocessing.log_transform(valid_data_, ['deposit'])
+
     ### 정규화
     print("standardization...")
     train_data_, valid_data_, test_data_ = preprocessing.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')

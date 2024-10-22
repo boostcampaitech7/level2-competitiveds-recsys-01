@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import os
 
+import tqdm
 from sklearn.neighbors import KDTree
 from sklearn.cluster import KMeans
 
@@ -14,7 +15,7 @@ from sklearn.cluster import KMeans
 # n 개월 동일한 아파트 거래량 함수
 def transaction_count_function(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame, months: int = 3) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     # 파일 경로 설정
-    transaction_folder = os.path.join(Directory.root_path, 'level2-competitiveds-recsys-01/data/transaction_data')
+    transaction_folder = os.path.join(Directory.root_path, 'data/transaction_data')
     if not os.path.exists(transaction_folder):
         os.makedirs(transaction_folder)
 

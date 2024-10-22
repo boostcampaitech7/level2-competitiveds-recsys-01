@@ -11,8 +11,8 @@ def lightgbm(X, y):
     return lgb_model
 
 def xgboost(X, y):
-    #xgb_model = xgb.XGBRegressor(learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED)
-    xgb_model = xgb.XGBRegressor(learning_rate=0.12243929663868629, n_estimators= 648, max_depth= 10, min_child_weight= 2, gamma= 0.11673592777053933, subsample= 0.999075058215622, colsample_bytree= 0.8848954245105137,enable_categorical=True, random_state=Config.RANDOM_SEED)
+    xgb_model = xgb.XGBRegressor(learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED)
+    #xgb_model = xgb.XGBRegressor(learning_rate=0.12243929663868629, n_estimators= 648, max_depth= 10, min_child_weight= 2, gamma= 0.11673592777053933, subsample= 0.999075058215622, colsample_bytree= 0.8848954245105137,enable_categorical=True, random_state=Config.RANDOM_SEED)
     xgb_model.fit(X, y)
     return xgb_model
 
