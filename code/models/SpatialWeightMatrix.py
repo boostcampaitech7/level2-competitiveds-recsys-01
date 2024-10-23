@@ -3,13 +3,16 @@ from sklearn.neighbors import NearestNeighbors
 from scipy.sparse import csr_matrix
 import joblib
 import os
+from sklearn.neighbors import BallTree
+import math
 
 from utils.constant_utils import Directory
 
 class SpatialWeightMatrix:
-    def __init__(self, k=10, chunk_size=50000):
+    def __init__(self, k=10, chunk_size=10000):
         self.k = k
         self.chunk_size = chunk_size
+        self.n = 0
         self.base_save_directory = Directory.root_path + 'data/spatial_matrix'
         os.makedirs(self.base_save_directory, exist_ok=True)
 
@@ -22,7 +25,7 @@ class SpatialWeightMatrix:
         os.makedirs(dir_path, exist_ok=True)
         return dir_path
 
-    def create_weight_matrix(self, data_chunk, chunk_id, dataset_type):
+    def create_weight_matrix(self, data_chunk, chunk_id, dataset_type, tree):
         '''
         청크 별로 공간적 가중치 행렬 생성
         '''
@@ -33,10 +36,9 @@ class SpatialWeightMatrix:
             return
         
         coords = data_chunk[['latitude', 'longitude']].values
-        neighbors = NearestNeighbors(n_neighbors=self.k, algorithm='ball_tree').fit(coords)
-        distance, indices = neighbors.kneighbors(coords)
+        distance, indices = tree.query(coords, k=self.k)
 
-        weight_matrix = np.zeros((len(data_chunk), len(data_chunk)))
+        weight_matrix = np.zeros((len(data_chunk), self.n))
         for i in range(len(data_chunk)):
             weights = np.zeros(self.k)
             for j in range(self.k):
@@ -50,16 +52,20 @@ class SpatialWeightMatrix:
         sparse_matrix = csr_matrix(weight_matrix) # 생성된 공간적 가중치 행렬을 희소 행렬로 저장
         joblib.dump(sparse_matrix, file_path)
 
-    def generate_weight_matrices(self, full_data, dataset_type):
+    def generate_weight_matrices(self, full_data, train_data, dataset_type):
+
+        tree = BallTree(train_data[['latitude', 'longitude']], metric='haversine') # train data에 대한 ball tree 생성
+        self.n = len(train_data)
+
         # 전체 데이터를 청크로 분할
-        num_chunks = len(full_data) // self.chunk_size + 1
+        num_chunks = math.ceil(len(full_data) / self.chunk_size)
         for i in range(num_chunks):
             chunk = full_data[i * self.chunk_size: (i + 1) * self.chunk_size]
             
             if chunk.empty:
                 continue
             
-            self.create_weight_matrix(chunk, i, dataset_type) # 청크 별로 공간적 가중치 행렬 생성
+            self.create_weight_matrix(chunk, i, dataset_type, tree) # 청크 별로 공간적 가중치 행렬 생성
 
     def load_weight_matrix(self, chunk_id, dataset_type):
         '''

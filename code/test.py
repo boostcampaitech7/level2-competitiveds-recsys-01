@@ -21,7 +21,7 @@ def main():
     title : result 폴더에 저장될 실험명을 지정합니다.
     '''
     name = 'jinnk0'
-    title = 'weight_matrix(k=10)_and_xgboost_test'
+    title = 'modified_weight_matrix(k=10)_and_xgboost_test_and_optuna'
 
     print("total data load ...")
     df = common_utils.merge_data(Directory.train_data, Directory.test_data)
@@ -137,14 +137,14 @@ def main():
 
     # 가중치 행렬 생성
     spatial_weight_matrix = SpatialWeightMatrix()
-    spatial_weight_matrix.generate_weight_matrices(train_data, dataset_type='train')
-    spatial_weight_matrix.generate_weight_matrices(valid_data, dataset_type='valid')
+    spatial_weight_matrix.generate_weight_matrices(train_data, train_data, dataset_type='train')
+    spatial_weight_matrix.generate_weight_matrices(valid_data, train_data, dataset_type='valid')
 
     # 모델 훈련 및 검증
     model = XGBoostWithSpatialWeight(spatial_weight_matrix)
     model.train(train_data, dataset_type='train')
 
-    mae = model.evaluate(valid_data)
+    mae = model.evaluate(valid_data, train_data)
 
     # record MAE score as csv
     hyperparams = "learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED"
@@ -153,15 +153,14 @@ def main():
     # train with total dataset
     print("Training with total dataset...")
     total_train_data = pd.concat([train_data, valid_data])
-    total_train_data = total_train_data.drop(columns=['initial_preds'], errors='ignore')
-    spatial_weight_matrix.generate_weight_matrices(total_train_data, dataset_type='train_total')
-    spatial_weight_matrix.generate_weight_matrices(test_data, dataset_type='test')
+    spatial_weight_matrix.generate_weight_matrices(total_train_data, total_train_data, dataset_type='train_total')
+    spatial_weight_matrix.generate_weight_matrices(test_data, total_train_data, dataset_type='test')
 
     model = XGBoostWithSpatialWeight(spatial_weight_matrix)
     model.train(total_train_data, dataset_type='train_total')
 
     sample_submission = Directory.sample_submission
-    sample_submission['deposit'] = model.inference(test_data)
+    sample_submission['deposit'] = model.inference(test_data, total_train_data)
 
     # save sample submission
     common_utils.submission_to_csv(sample_submission, title)
