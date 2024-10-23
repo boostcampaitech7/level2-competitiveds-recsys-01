@@ -2,9 +2,9 @@ from utils.datasets import *
 from tqdm import tqdm
 from sklearn.metrics import mean_absolute_error
 from models.CombinedModel import *
+from torch.utils.data import DataLoader
 
 def train(model, train_loader, loss_fn, optimizer, epochs, device, losses):
-
     # train 모드로 설정
     model.train()
 
@@ -68,10 +68,7 @@ def inference_test(model, test_loader, device) -> np.ndarray:
 
     return output
 
-if __name__=='__cnn_mlp__':
-    from utils.datasets import CombinedDataset
-    from torch.utils.data import DataLoader
-
+if __name__=='__main__':
     # valid MAE 따로 구하고 싶은 경우 주석 해제
     train_set = CombinedDataset(mode='train')
     #valid_set = CombinedDataset(mode='valid')
