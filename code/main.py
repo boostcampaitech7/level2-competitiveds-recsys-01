@@ -22,7 +22,7 @@ def main():
     name : 실험자 이름입니다.
     title : result 폴더에 저장될 실험명을 지정합니다.
     '''
-    name = 'eun'
+    name = 'jinnk0'
     title = 'cluster,timefeature,categorical,drop,gangnam,xgb1000'
 
     print("total data load ...")
@@ -140,3 +140,4 @@ def main():
 
 if __name__ == "__main__":
     prediction, mae = main()
+    print(mae)
