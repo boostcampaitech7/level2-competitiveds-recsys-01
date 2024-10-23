@@ -8,6 +8,8 @@ from features.distance_features import *
 from features.other_features import *
 from models.SpatialWeightMatrix import SpatialWeightMatrix
 from models.XGBoostWithSpatialWeight import XGBoostWithSpatialWeight
+from sklearn.metrics import mean_absolute_error
+from models.SeedEnsemble import SeedEnsemble
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -20,8 +22,8 @@ def main():
     name : 실험자 이름입니다.
     title : result 폴더에 저장될 실험명을 지정합니다.
     '''
-    name = 'jinnk0'
-    title = 'modified_weight_matrix(k=10)_and_xgboost_test_and_optuna'
+    name = 'eun'
+    title = 'final_seed(10)_ensemble_weight_matrix(k=10)_and_xgboost_test_and_optuna'
 
     print("total data load ...")
     df = common_utils.merge_data(Directory.train_data, Directory.test_data)
@@ -43,6 +45,7 @@ def main():
 
     ### 데이터 전처리
     print("start to preprocessing...")
+
     # type 카테고리화
     train_data_ = preprocessing.numeric_to_categoric(train_data_, 'contract_type', {0:'new', 1:'renew', 2:'unknown'})
     valid_data_ = preprocessing.numeric_to_categoric(valid_data_, 'contract_type', {0:'new', 1:'renew', 2:'unknown'})
@@ -51,13 +54,10 @@ def main():
     # 중복 제거
     train_data_ = preprocessing.handle_duplicates(train_data_)
     valid_data_ = preprocessing.handle_duplicates(valid_data_)
-    
-    # 로그 변환
-    #df = preprocessing_fn.log_transform(df, 'deposit')
-
 
     ### 피처 엔지니어링
     print("start to feature engineering...")
+
     # clustering_feature
     print("create clustering features")
     train_data, valid_data, test_data = create_clustering_target(train_data_, valid_data_, test_data_)
@@ -66,35 +66,21 @@ def main():
     print("create distance features")
     train_data, valid_data, test_data = distance_gangnam(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_nearest_subway_distance(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = create_nearest_park_distance_and_area(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = create_nearest_school_distance(train_data, valid_data, test_data)
     train_data, valid_data, test_data = weighted_subway_distance(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = create_nearest_park_distance_and_area(train_data, valid_data, test_data)
 
     # other_features
     print("create other features")
-    #train_data, valid_data, test_data = create_temporal_feature(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = create_sin_cos_season(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_floor_area_interaction(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_sum_park_area_within_radius(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = shift_interest_rate_function(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'age')
-    #train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'floor')
-    #train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'area_m2')
 
     
     # count_features
     print("create count features")
-    #train_data, valid_data, test_data = transaction_count_function(train_data, valid_data, test_data)
-    # 위의 함수를 바로 실행하기 위한 구조 : data/transaction_data에 train/valid/test_transaction_{month}.txt 구조의 파일이 있어야함
     train_data, valid_data, test_data = create_subway_within_radius(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_school_within_radius(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
-    #train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
     
-    
-    
-    ### feature drop(제거하고 싶은 feature는 drop_columns로 제거됨. contract_day에 원하는 column을 추가)
+    ### feature select(feature importance 상위 20개)
     selected_columns = [
         'distance_km',
         'floor_area_interaction',
@@ -129,9 +115,6 @@ def main():
     print("standardization...")
     train_data, valid_data, test_data = preprocessing.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')
 
-    # feature selection
-    #train_data, valid_data, test_data = preprocessing.feature_selection(train_data_, valid_data_, test_data_)
-
     # train model
     print("Training the model...")
 
@@ -140,15 +123,12 @@ def main():
     spatial_weight_matrix.generate_weight_matrices(train_data, train_data, dataset_type='train')
     spatial_weight_matrix.generate_weight_matrices(valid_data, train_data, dataset_type='valid')
 
-    # 모델 훈련 및 검증
-    model = XGBoostWithSpatialWeight(spatial_weight_matrix)
-    model.train(train_data, dataset_type='train')
-
-    mae = model.evaluate(valid_data, train_data)
-
-    # record MAE score as csv
-    hyperparams = "learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED"
-    common_utils.mae_to_csv(name, title, hyperparams=hyperparams, mae = mae)
+    seed_ensemble = SeedEnsemble(model_class=XGBoostWithSpatialWeight, spatial_weight_matrix=spatial_weight_matrix)
+    seed_ensemble.train(train_data, dataset_type='train')
+    
+    final_test_preds = seed_ensemble.evaluate(valid_data, train_data)
+    mae = mean_absolute_error(valid_data['deposit'], final_test_preds)
+    print(f"total MAE on validation data: {mae}")
 
     # train with total dataset
     print("Training with total dataset...")
@@ -156,11 +136,12 @@ def main():
     spatial_weight_matrix.generate_weight_matrices(total_train_data, total_train_data, dataset_type='train_total')
     spatial_weight_matrix.generate_weight_matrices(test_data, total_train_data, dataset_type='test')
 
-    model = XGBoostWithSpatialWeight(spatial_weight_matrix)
-    model.train(total_train_data, dataset_type='train_total')
+    seed_ensemble = SeedEnsemble(model_class=XGBoostWithSpatialWeight, spatial_weight_matrix=spatial_weight_matrix)
+    seed_ensemble.train(total_train_data, dataset_type='train_total')
+    final_test_preds = seed_ensemble.inference(test_data, total_train_data)
 
     sample_submission = Directory.sample_submission
-    sample_submission['deposit'] = model.inference(test_data, total_train_data)
+    sample_submission['deposit'] = final_test_preds
 
     # save sample submission
     common_utils.submission_to_csv(sample_submission, title)

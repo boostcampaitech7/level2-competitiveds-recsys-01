@@ -7,6 +7,7 @@ class Config:
     SPLIT_YEAR_END = 202312
     CATEGORICAL_COLUMNS = ['contract_type']
     NUMERICAL_COLUMNS = ['area_m2','contract_year_month','contract_day','floor','built_year','latitude','longitude','age','deposit']
+    SEEDS = [42, 7, 2023, 1024, 99, 512, 1001, 888, 3456, 1234]
 
     
 class Directory:

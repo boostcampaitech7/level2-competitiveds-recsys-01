@@ -5,18 +5,18 @@ from sklearn.metrics import mean_absolute_error
 import math
 import json
 
-from utils.constant_utils import Config, Directory
+from utils.constant_utils import Directory
 
 class XGBoostWithSpatialWeight:
 
-    def __init__(self, spatial_weight_matrix):
+    def __init__(self, spatial_weight_matrix, seed):
         path = Directory.root_path + 'code/models/config_optuna.json'
         with open(path, 'r') as file:
             config = json.load(file)
-        hyperparams = config['model']['hyperparameters']
-
+        hyperparams = config['model']['hyperparameters']  
+        self.seed = seed
         self.spatial_weight_matrix = spatial_weight_matrix
-        self.spatial_model = xgb.XGBRegressor(**hyperparams, random_state=Config.RANDOM_SEED)
+        self.spatial_model = xgb.XGBRegressor(**hyperparams, random_state=self.seed)
 
     def add_spatial_features(self, data_chunk, area_per_deposit, chunk_id, dataset_type):
         weight_matrix = self.spatial_weight_matrix.load_weight_matrix(chunk_id=chunk_id, dataset_type=dataset_type)
@@ -70,10 +70,10 @@ class XGBoostWithSpatialWeight:
         # 최종 검증 데이터에 대한 예측
         final_preds = self.spatial_model.predict(valid_data_with_spatial.drop(columns=['deposit']))
 
-        # MAE 계산
         mae = mean_absolute_error(valid_data_with_spatial['deposit'], final_preds)
         print(f"MAE on validation data: {mae}")
-        return mae
+        
+        return final_preds, mae
 
     def inference(self, test_data, train_data):
 
@@ -92,6 +92,7 @@ class XGBoostWithSpatialWeight:
             test_chunk_with_spatial = self.add_spatial_features(test_chunk.copy(), area_per_deposit, chunk_id=j, dataset_type='test')
             chunks.append(test_chunk_with_spatial)
         test_data_with_spatial = pd.concat(chunks, ignore_index=True)
+        print(f"inference model seed = {self.seed}")
 
         # 최종 테스트 데이터에 대한 예측
         final_preds = self.spatial_model.predict(test_data_with_spatial.drop(columns=['deposit']))
