@@ -317,3 +317,23 @@ def treat_categorical_cols(df):
 
     #df_new = df_new.drop(['year', 'built_year', 'month', 'quarter', 'contract_type'], axis = 1)
     return df_new
+
+def add_recent_rent_in_building(total_df):
+    total_df['contract_date'] = total_df['contract_year_month'] * 100 + total_df['contract_day']
+    
+    df_train = total_df[total_df['type'] == 'train'].copy()
+    df_test = total_df[total_df['type'] == 'test'].copy()
+    
+    df_train_sorted = df_train.sort_values(by=['latitude', 'longitude', 'built_year', 'area_m2', 'contract_date'])
+    
+    df_train_sorted['recent_rent_in_building'] = df_train_sorted.groupby(['latitude', 'longitude', 'built_year', 'area_m2'])['deposit'].shift(1)
+    df_train_sorted['recent_rent_in_building'].fillna(df_train_sorted['deposit'], inplace=True)
+    
+    recent_rent_index = df_train_sorted.groupby(['latitude', 'longitude', 'built_year', 'area_m2'])['recent_rent_in_building'].nth(-1).index
+    recent_rent_df = df_train_sorted.loc[recent_rent_index]
+    
+    df_test_merged = df_test.merge(recent_rent_df[['latitude','longitude','built_year','area_m2','recent_rent_in_building']], on=['latitude','longitude','built_year','area_m2'], how='left').set_index(df_test.index)
+    df_test_merged['recent_rent_in_building'].fillna(0, inplace=True)
+    
+    total_df = pd.concat([df_train_sorted.sort_index(),df_test_merged])
+    return total_df

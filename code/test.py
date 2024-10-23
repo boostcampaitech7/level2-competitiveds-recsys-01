@@ -10,6 +10,7 @@ from models.SpatialWeightMatrix import SpatialWeightMatrix
 from models.XGBoostWithSpatialWeight import XGBoostWithSpatialWeight
 import warnings
 warnings.filterwarnings('ignore')
+import json
 
 
 
@@ -35,6 +36,10 @@ def main():
     ### 이상치 처리
     print("start to cleaning outliers...")
     df = preprocessing.handle_age_outliers(df)
+
+    ### 가장 최근 거래가 apply
+    print("add recent rent deposit...")
+    df = add_recent_rent_in_building(df)
 
     ### 데이터 분할
     print("train, valid, test split for preprocessing & feature engineering ...")
@@ -96,6 +101,7 @@ def main():
     
     ### feature drop(제거하고 싶은 feature는 drop_columns로 제거됨. contract_day에 원하는 column을 추가)
     selected_columns = [
+        'recent_rent_in_building',
         'distance_km',
         'floor_area_interaction',
         'high_schools_within_radius',
@@ -146,8 +152,9 @@ def main():
 
     mae = model.evaluate(valid_data, train_data)
 
+    
     # record MAE score as csv
-    hyperparams = "learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED"
+    hyperparams = '"learning_rate": 0.12243929663868629,"n_estimators": 648,"max_depth": 10,"min_child_weight": 2,"gamma": 0.11673592777053933,"subsample": 0.999075058215622,"colsample_bytree": 0.8848954245105137,"enable_categorical": true'
     common_utils.mae_to_csv(name, title, hyperparams=hyperparams, mae = mae)
 
     # train with total dataset
