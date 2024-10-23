@@ -8,6 +8,8 @@ from features.distance_features import *
 from features.other_features import *
 
 from tqdm import tqdm
+from models.SpatialWeightMatrix import SpatialWeightMatrix
+from models.XGBoostWithSpatialWeight import XGBoostWithSpatialWeight
 
 import model
 from inference import *
@@ -93,13 +95,36 @@ def main():
     train_data, valid_data, test_data = create_school_within_radius(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
     train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
-    
-    
-    
+
+
     ### feature drop(제거하고 싶은 feature는 drop_columns로 제거됨. contract_day에 원하는 column을 추가)
-    train_data_ = preprocessing.drop_columns(train_data, ['contract_day'])
-    valid_data_ = preprocessing.drop_columns(valid_data, ['contract_day'])
-    test_data_ = preprocessing.drop_columns(test_data, ['contract_day'])
+    selected_columns = [
+        'distance_km',
+        'floor_area_interaction',
+        'high_schools_within_radius',
+        'subways_within_radius',
+        'built_year',
+        'subway_info',
+        'longitude',
+        'nearest_subway_distance_x',
+        'area_m2',
+        'middle_schools_within_radius',
+        'schools_within_radius',
+        'nearest_subway_distance_y',
+        'cluster',
+        'contract_type',
+        'distance_to_centroid',
+        'distance_category',
+        'contract_year_month',
+        'latitude',
+        'nearest_park_area_sum',
+        'elementary_schools_within_radius',
+        'deposit'
+    ]
+    train_data_ = train_data[selected_columns]
+    valid_data_ = valid_data[selected_columns]
+    test_data_ = test_data[selected_columns]
+
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 # 여기 아래서부터 자유롭게 시도(drop columns를 제외하면 대략 52개 column정도 있음)   
@@ -116,9 +141,18 @@ def main():
     
     # train model
     print("Training the model...")
-    model_ = model.xgboost(X_train, y_train)
 
-    prediction, mae = inference(model_, 'validation', X_valid, y_valid)
+
+# 가중치 행렬 생성
+    spatial_weight_matrix = SpatialWeightMatrix()
+    spatial_weight_matrix.generate_weight_matrices(train_data, train_data, dataset_type='train')
+    spatial_weight_matrix.generate_weight_matrices(valid_data, train_data, dataset_type='valid')
+
+    # 모델 훈련 및 검증
+    model = XGBoostWithSpatialWeight(spatial_weight_matrix)
+    model.train(train_data, dataset_type='train')
+
+    mae = model.evaluate(valid_data, train_data)
 
     # record MAE score as csv
     hyperparams = "learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED"
@@ -126,17 +160,20 @@ def main():
 
     # train with total dataset
     print("Training with total dataset...")
-    X_total, y_total = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
-    model_ = model.xgboost(X_total, y_total)
+    total_train_data = pd.concat([train_data, valid_data])
+    spatial_weight_matrix.generate_weight_matrices(total_train_data, total_train_data, dataset_type='train_total')
+    spatial_weight_matrix.generate_weight_matrices(test_data, total_train_data, dataset_type='test')
 
-    # inference with test data
-    submission = inference(model_, 'submission', X_test)
+    model = XGBoostWithSpatialWeight(spatial_weight_matrix)
+    model.train(total_train_data, dataset_type='train_total')
+
+    sample_submission = Directory.sample_submission
+    sample_submission['deposit'] = model.inference(test_data, total_train_data)
 
     # save sample submission
-    common_utils.submission_to_csv(submission, 'test_all_columns+xgboost')
+    common_utils.submission_to_csv(sample_submission, title)
 
     print("Successfully executed main.py.")
-    return prediction, mae
 
 if __name__ == "__main__":
-    prediction, mae = main()
+    main()
