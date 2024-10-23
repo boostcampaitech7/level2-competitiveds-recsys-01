@@ -317,3 +317,21 @@ def treat_categorical_cols(df):
 
     #df_new = df_new.drop(['year', 'built_year', 'month', 'quarter', 'contract_type'], axis = 1)
     return df_new
+
+def apt_recent_transaction(df):
+    # key : apt_idx, value : 최근 거래 3회의 평균값
+    search_complete = {}
+
+    tmp_df = df[df['type']=='train'].sort_values(by=['apt_idx', 'contract_year_month'])
+    def search_recent_transaction(row):
+        apt_idx = row['apt_idx']
+        if apt_idx in search_complete.keys():
+            return search_complete[apt_idx]
+        recent_transaction = tmp_df[tmp_df['apt_idx']==apt_idx]['deposit'][-5:]
+        recent_transaction = recent_transaction.mean()
+        search_complete[apt_idx] = recent_transaction
+        return recent_transaction
+
+    df['recent_transaction'] = df.apply(search_recent_transaction, axis=1)
+    df['recent_transaction'].fillna(df['recent_transaction'].median())
+    return df
