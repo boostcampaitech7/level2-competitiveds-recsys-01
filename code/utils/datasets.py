@@ -13,7 +13,7 @@ import torch
 from torch import nn
 import torch.optim as optim
 
-import model
+from models.CombinedModel import *
 from inference import *
 
 def create_embedding(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -24,7 +24,8 @@ def create_embedding(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_da
     embedding_modules = {
             col: nn.Embedding(
                 num_embeddings= total_df[col].nunique(),
-                embedding_dim = 128
+                embedding_dim = min(50, int((total_df[col].nunique()+1)/2))
+
                 )
         for col in categorical_cols
     }
@@ -49,7 +50,7 @@ def create_embedding(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_da
         train_data.drop(columns=[col], inplace=True)
         valid_data.drop(columns=[col], inplace=True)        
         test_data.drop(columns=[col], inplace=True)
-
+        
         # 텐서를 detach 후 numpy로 변환하여 새로운 컬럼으로 적용한다.
         train_data[f"{col}_embedded"] = train_embedded.detach().numpy()
         valid_data[f"{col}_embedded"] = valid_embedded.detach().numpy()
@@ -76,6 +77,8 @@ class GridDataset(Dataset):
         train_data_ = preprocessing.handle_duplicates(train_data_)
         valid_data_ = preprocessing.handle_duplicates(valid_data_)
         
+        train_data_ = pd.concat([train_data_, valid_data_], axis=0)
+
         train_data_.reset_index(drop=True, inplace=True)
         valid_data_.reset_index(drop=True, inplace=True)
         test_data_.reset_index(drop=True, inplace=True)
@@ -83,6 +86,7 @@ class GridDataset(Dataset):
         grid = torch.zeros(len(lat_bins), len(long_bins))
 
         if self.mode=="train":
+            # train + valid
             X = torch.stack([grid]*len(train_data_))
             y = torch.tensor(train_data_['deposit'].values)
             print(f"X.shape: {X.shape}, train_data_ length: {len(train_data_)}")
@@ -120,7 +124,7 @@ class GridDataset(Dataset):
         return len(self.X)
 
     def __getitem__(self, idx):
-        if self.mode=="train":
+        if self.mode=="train" or self.mode=="valid":
             return (self.X[idx], self.y[idx])
         else:
             return (self.X[idx])
@@ -173,6 +177,11 @@ class MLPDataset(Dataset):
 
         # other_features
         print("create other features")
+        train_data, valid_data, test_data = create_temporal_feature(train_data, valid_data, test_data)
+        train_data, valid_data, test_data = create_sin_cos_season(train_data, valid_data, test_data)
+        train_data, valid_data, test_data = create_floor_area_interaction(train_data, valid_data, test_data)
+        train_data, valid_data, test_data = create_sum_park_area_within_radius(train_data, valid_data, test_data)
+        train_data, valid_data, test_data = shift_interest_rate_function(train_data, valid_data, test_data)
         train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'age')
         train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'floor')
         train_data, valid_data, test_data = categorization(train_data, valid_data, test_data, category = 'area_m2')
@@ -180,36 +189,39 @@ class MLPDataset(Dataset):
 
         # count_features
         print("create count features")
-        train_data, valid_data, test_data = transaction_count_function(train_data, valid_data, test_data)
-        # 위의 함수를 바로 실행하기 위한 구조 : data/transaction_data에 train/valid/test_transaction_{month}.txt 구조의 파일이 있어야함
         train_data, valid_data, test_data = create_subway_within_radius(train_data, valid_data, test_data)
         train_data, valid_data, test_data = create_school_within_radius(train_data, valid_data, test_data)
         train_data, valid_data, test_data = create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
         train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
 
+        # top 20개의 column만 Input으로 제한
+        top20_cols = ['distance_km', 'built_year', 'area_m2', 
+                'cluster', 'contract_year_month', 'floor_area_interaction', 
+                'subway_info', 'middle_schools_within_radius', 'contract_type', 
+                'high_schools_within_radius', 'elementary_schools_within_radius', 'nearest_subway_distance_x', 'nearest_subway_distance_y',
+                'distance_category', 'subways_within_radius', 'nearest_park_area_sum',
+                'schools_within_radius','distance_to_centroid', 'deposit']
 
-
-        ### feature drop(제거하고 싶은 feature는 drop_columns로 제거됨. contract_day에 원하는 column을 추가)
-        ### 임시로 카테고리형 변수 drop함
-        train_data_ = preprocessing.drop_columns(train_data, ['contract_day'])
-        valid_data_ = preprocessing.drop_columns(valid_data, ['contract_day'])
-        test_data_ = preprocessing.drop_columns(test_data, ['contract_day'])
+        train_data_, valid_data_, test_data_ = train_data[top20_cols], valid_data[top20_cols], test_data[top20_cols]
 
         # categorical embedding 생성
         train_data_, valid_data_, test_data_ = create_embedding(train_data_, valid_data_, test_data_)
-
 
         ### 정규화
         print("standardization...")
         train_data_, valid_data_, test_data_ = preprocessing.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')
 
-        # feature selection
-        # train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing.feature_selection(train_data_, valid_data_, test_data_)
-
         # feature split
         X_train, y_train, X_valid, y_valid, X_test = common_utils.split_feature_target(train_data_, valid_data_, test_data_)
 
+        X_train.drop(columns=['deposit'], errors='ignore', inplace=True)
+        X_test.drop(columns=['deposit'], errors='ignore', inplace=True)
+        
+        print(X_train.columns, X_test.columns)
         if mode=='train':
+            # train + valid
+            X_train, y_train = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
+            X_train.reset_index(inplace=True)
             self.X = torch.tensor(X_train.values, dtype=torch.float32).unsqueeze(1)
             self.y = torch.tensor(y_train.values, dtype=torch.float32).unsqueeze(1)
         elif mode=='valid':
@@ -222,7 +234,7 @@ class MLPDataset(Dataset):
         return len(self.X)
 
     def __getitem__(self, idx):
-        if self.mode=="train":
+        if self.mode=="train" or self.mode=="valid":
             return (self.X[idx], self.y[idx])
         else:
             return (self.X[idx])
