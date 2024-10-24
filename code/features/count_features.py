@@ -8,7 +8,7 @@ import tqdm
 from sklearn.neighbors import KDTree
 from sklearn.cluster import KMeans
 
-#from geopy.distance import great_circle
+from geopy.distance import great_circle
 
 
 # n 개월 동일한 아파트 거래량 함수

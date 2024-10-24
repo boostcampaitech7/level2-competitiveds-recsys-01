@@ -1,0 +1,17 @@
+{
+    "model": {
+      "type": "XGBoost",
+      "hyperparameters": {
+        "learning_rate": 0.12181985334084716,
+        "n_estimators": 519,
+        "max_depth": 10,
+        "min_child_weight": 4,
+        "gamma": 0.0005664667887742828,
+        "subsample": 0.9564911766561139,
+        "colsample_bytree": 0.7224652439898773,
+        "lambda": 0.604882762988207, 
+        "alpha": 0.3312751511472211,
+        "enable_categorical": true
+      }
+    }
+  }
