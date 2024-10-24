@@ -5,15 +5,12 @@ from sklearn.metrics import mean_absolute_error
 import math
 import json
 
-from utils.constant_utils import Directory
+from utils.constant_utils import Config
 
 class XGBoostWithSpatialWeight:
 
     def __init__(self, spatial_weight_matrix, seed):
-        path = Directory.root_path + 'code/utils/hyperparameters.json'
-        with open(path, 'r') as file:
-            params = json.load(file)
-        hyperparams = params['model']['hyperparameters_optuna']  
+        hyperparams = Config.XGBOOST_BEST_PARAMS
         self.seed = seed
         self.spatial_weight_matrix = spatial_weight_matrix
         self.spatial_model = xgb.XGBRegressor(**hyperparams, random_state=self.seed)

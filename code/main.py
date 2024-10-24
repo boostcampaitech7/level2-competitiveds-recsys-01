@@ -9,7 +9,7 @@ from features import clustering_features
 
 from models.SpatialWeightMatrix import SpatialWeightMatrix
 from models.XGBoostWithSpatialWeight import XGBoostWithSpatialWeight
-import models.SeedEnsemble as se
+from models.SeedEnsemble import SeedEnsemble
 
 from handler import feature_engineering as fe
 from handler import preprocessing as pre
@@ -125,7 +125,7 @@ def main():
     spatial_weight_matrix.generate_weight_matrices(valid_data_scaled, train_data_scaled, dataset_type='valid')
 
     # seed ensemble
-    seed_ensemble = se(model_class=XGBoostWithSpatialWeight, spatial_weight_matrix=spatial_weight_matrix)
+    seed_ensemble = SeedEnsemble(model_class=XGBoostWithSpatialWeight, spatial_weight_matrix=spatial_weight_matrix)
     seed_ensemble.train(train_data_scaled, dataset_type='train')
     
     final_test_preds = seed_ensemble.evaluate(valid_data_scaled, train_data_scaled)
@@ -138,7 +138,7 @@ def main():
     spatial_weight_matrix.generate_weight_matrices(total_train_data, total_train_data, dataset_type='train_total')
     spatial_weight_matrix.generate_weight_matrices(test_data_scaled, total_train_data, dataset_type='test')
 
-    seed_ensemble = se(model_class=XGBoostWithSpatialWeight, spatial_weight_matrix=spatial_weight_matrix)
+    seed_ensemble = SeedEnsemble(model_class=XGBoostWithSpatialWeight, spatial_weight_matrix=spatial_weight_matrix)
     seed_ensemble.train(total_train_data, dataset_type='train_total')
     
     
