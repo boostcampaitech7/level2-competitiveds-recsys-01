@@ -20,8 +20,8 @@ feature/
 **clustering_features.py**
 | function   | feature name    | description       |
 |------------|-------------------|-------------------------|
-| clustering | subway_info | subway의 위경도 기준으로 k=20 clustering  |
-| clustering | park_info | park의 위경도 기준으로 k=20 clustering     |
+| clustering | `subway_info` | subway의 위경도 기준으로 k=20 clustering  |
+| clustering | `park_info` | park의 위경도 기준으로 k=20 clustering     |
 | clustering | school_info | 학교의 위경도 기준으로 k=20 clustering     |
 |create_clustering_target| cluster | target을 기준으로 k=20 clustering |
 |create_clustering_target| distance_to_centroid | 군집 내 centroid와의 거리 |
