@@ -21,7 +21,7 @@
 | 박재욱 | 서재은 | 임태우 | 최태순 | 허진경 |
 |:---:|:---:|:---:|:---:|:---:|
 |[<img src="https://github.com/user-attachments/assets/0c4ff6eb-95b0-4ee4-883c-b10c1a42be14" width=130>](https://github.com/park-jaeuk)|[<img src="https://github.com/user-attachments/assets/b6cff4bf-79c8-4946-896a-666dd54c63c7" width=130>](https://github.com/JaeEunSeo)|[<img src="https://github.com/user-attachments/assets/f6572f19-901b-4aea-b1c4-16a62a111e8d" width=130>](https://github.com/Cyberger)|[<img src="https://github.com/user-attachments/assets/a10088ec-29b4-47aa-bf6a-53520b6106ce" width=130>](https://github.com/choitaesoon)|[<img src="https://github.com/user-attachments/assets/7ab5112f-ca4b-4e54-a005-406756262384" width=130>](https://github.com/jinnk0)|
-|EDA, Feature Engineering|EDA, Feature Engineering|EDA, Feature Engineering|EDA, Feature Engineering|EDA, Feature Engineering|
+|EDA, Feature Engineering, DL Modeling|EDA, Feature Engineering, DL Modeling|EDA, Feature Engineering, ML Modeling|EDA, Feature Engineering|EDA, Feature Engineering, ML Modeling|
 ---
 ## 🏠📊 프로젝트 개요
 | 개요 | 설명 |
@@ -38,8 +38,8 @@
 📅 2024.10.01 ~ 2024.10.24 <br>
 <img width="800" alt="스크린샷 2024-10-24 오후 2 56 59" src="https://github.com/user-attachments/assets/3d6b4a91-3586-4555-88bf-05fc3f6480e0"></img></div>
 </div>
----
 
+---
 ## 🕹️ 프로젝트 실행
 ### 디렉토리 구조
 
@@ -47,7 +47,7 @@
 📦 level2-competitiveds-recsys-01
 ├── 📁code
 │   ├── cnn_mlp.py
-│   ├── tabtrasformer_main.py
+│   ├── tabtransformer_main.py
 │   ├── main.py
 │   ├── 📁features
 │   │   ├── README.md
