@@ -39,13 +39,14 @@ def add_recent_rent_in_building(train_data: pd.DataFrame, test_data: pd.DataFram
         df_total_new_sorted['recent_rent_in_building'].fillna(df_total_new_sorted['deposit'], inplace=True)
 
         # 마지막 계약가 계산
-        recent_rent_index = df_total_new_sorted.groupby(['latitude', 'longitude', 'built_year', 'area_m2'])['recent_rent_in_building'].nth(-1).index
-        recent_rent_df = df_total_new_sorted.loc[recent_rent_index]
+        recent_rent_df_map = df_total_new_sorted[['latitude', 'longitude', 'built_year', 'area_m2', 'recent_rent_in_building']].reset_index()
+        recent_rent_df_map_index = recent_rent_df_map.groupby(['latitude', 'longitude', 'built_year', 'area_m2'])['recent_rent_in_building'].nth(-1).index
+        recent_rent_df_map_scaled = recent_rent_df_map.loc[recent_rent_df_map_index]
 
-        df_test_new = df_test_new.merge(recent_rent_df[['latitude', 'longitude', 'built_year', 'area_m2', 'recent_rent_in_building']], 
+        df_test_new = df_test_new.merge(recent_rent_df_map_scaled[['latitude', 'longitude', 'built_year', 'area_m2', 'recent_rent_in_building']], 
                                          on=['latitude', 'longitude', 'built_year', 'area_m2'], how='left')
 
-        df_test_new['recent_rent_in_building'].fillna(recent_rent_df['recent_rent_in_building'].median(), inplace=True)
+        df_test_new['recent_rent_in_building'].fillna(recent_rent_df_map['recent_rent_in_building'].median(), inplace=True)
 
         return df_total_new_sorted.sort_index(), df_test_new
 
