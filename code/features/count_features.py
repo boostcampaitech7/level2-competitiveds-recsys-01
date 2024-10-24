@@ -11,7 +11,6 @@ from sklearn.cluster import KMeans
 #from geopy.distance import great_circle
 
 
-
 # n 개월 동일한 아파트 거래량 함수
 def transaction_count_function(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame, months: int = 3) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     # 파일 경로 설정
@@ -53,10 +52,10 @@ def transaction_count_function(train_data: pd.DataFrame, valid_data: pd.DataFram
     total_data[f'transaction_count_last_{months}_months'] = 0
 
     # 위도, 경도, 건축 연도로 그룹화
-    grouped = total_data.groupby(['latitude', 'longitude', 'built_year'])
+    grouped = total_data.groupby(['latitude', 'longitude', 'built_year', 'area_m2'])
 
     # 각 그룹에 대해 거래량 계산
-    for (lat, lon, built_year), group in tqdm(grouped, desc=f"Calculating previous {months} months transaction counts by location and year"):
+    for (lat, lon, built_year, area), group in tqdm(grouped, desc=f"Calculating previous {months} months transaction counts by location and year"):
         # 그룹 내 거래일 정렬
         group = group.sort_values(by='date')
     
