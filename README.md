@@ -101,6 +101,7 @@ Private, Public Leader Board **2위**
 2. Unzip train, dev, test csv files at /data directory
 3. Upload sample_submission.csv at /data directory
 4. Execute `main.py` to run solution model
+    - `main.py` 실행 시 Spatial Weight Matrix 생성에 소요되는 시간을 고려해 미리 생성해둔 [Spatial Weight Matrix](https://drive.google.com/file/d/1zh9hHwx8iDrOQC9jltPN3fpeFlC9X8oa/view?usp=sharing) 사용
     
     Execute `cnn_mlp.py` to run CNN + MLP combined model
     
