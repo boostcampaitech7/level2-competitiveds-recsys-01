@@ -76,3 +76,18 @@ def create_clustering_target(train_data: pd.DataFrame, valid_data: pd.DataFrame,
     test_data = create_cluster_distance_to_centroid(test_data, centroids)
 
     return train_data, valid_data, test_data
+
+
+# Cluster 별 deposit의 중앙값 계산
+def create_cluster_deposit_median(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+
+    cluster_deposit_median = train_data.groupby('cluster')['deposit'].median().reset_index(name='deposit_median')
+
+
+    train_data = train_data.merge(cluster_deposit_median, on='cluster', how='left')
+    valid_data = valid_data.merge(cluster_deposit_median, on='cluster', how='left')
+    
+
+    test_data = test_data.merge(cluster_deposit_median, on='cluster', how='left')
+
+    return train_data, valid_data, test_data
