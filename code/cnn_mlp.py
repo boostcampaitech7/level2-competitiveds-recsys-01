@@ -97,5 +97,9 @@ if __name__=='__main__':
     ### inference with test set
     exp_title = 'CNN+MLPv4'
     submission = inference_test(model=model, test_loader=test_loader, device=device)
-    submission = pd.DataFrame(submission)
-    submission_to_csv(submission, exp_title)
+    df_submission = pd.DataFrame({
+        'index': range(len(submission)),
+        'deposit': submission 
+    })
+  
+    submission_to_csv(df_submission, exp_title)
