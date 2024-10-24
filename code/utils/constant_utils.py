@@ -5,8 +5,35 @@ class Config:
     RANDOM_SEED = 42
     SPLIT_YEAR_START = 202307
     SPLIT_YEAR_END = 202312
+    
+    # xgboost 진행 후 선정된 top 20 features
+    TOP_20_FEATURES = [
+        'distance_km',
+        'floor_area_interaction',
+        'high_schools_within_radius',
+        'subways_within_radius',
+        'built_year',
+        'subway_info',
+        'longitude',
+        'nearest_subway_distance_x',
+        'area_m2',
+        'middle_schools_within_radius',
+        'schools_within_radius',
+        'nearest_subway_distance_y',
+        'cluster',
+        'contract_type',
+        'distance_to_centroid',
+        'distance_category',
+        'contract_year_month',
+        'latitude',
+        'nearest_park_area_sum',
+        'elementary_schools_within_radius',
+        'deposit'
+    ]
+    
     CATEGORICAL_COLUMNS = ['contract_type','cluster','subway_info','park_info', 'school_info', 'distance_category','age_category', 'floor_category', 'area_category']
     NUMERICAL_COLUMNS = ['area_m2','contract_year_month','contract_day','floor','built_year','latitude','longitude','age','deposit']
+
 
     # RandomForest Regressor Parameters
     RANDOM_FOREST_PARAMS = {
