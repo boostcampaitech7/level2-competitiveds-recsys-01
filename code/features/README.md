@@ -47,7 +47,7 @@ feature/
 | create_nearest_school_distance | nearest_elementary_distance | 가장 가까운 초등학교까지 거리 |
 | create_nearest_school_distance | nearest_middle_distance | 가장 가까운 중학교까지 거리 |
 | create_nearest_school_distance | nearest_high_distance | 가장 가까운 고등학교까지 거리 |
-| weighted_subway_distance | weight |환승역 가중치 거리 계산  |
+| weighted_subway_distance | weight_subway_distance |환승역 가중치 거리 계산  |
 
 
 **other_features.py**
