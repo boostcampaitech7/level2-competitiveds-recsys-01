@@ -134,6 +134,7 @@ class MLPDataset(Dataset):
     def __init__(self, mode="train"):
         self.mode = mode
         df = common_utils.merge_data(Directory.train_data, Directory.test_data)
+        
         ### 클러스터 피처 apply
         print("clustering apply ...")
         for info_df_name in ['subway_info', 'school_info', 'park_info']:
@@ -194,7 +195,7 @@ class MLPDataset(Dataset):
         train_data, valid_data, test_data = create_school_counts_within_radius_by_school_level(train_data, valid_data, test_data)
         train_data, valid_data, test_data = create_place_within_radius(train_data, valid_data, test_data)
 
-        # top 20개의 column만 Input으로 제한
+        # top 20개의 column만 Input으로 제한 - 사용 시 주석을 해제
         top20_cols = ['distance_km', 'built_year', 'area_m2', 
                 'cluster', 'contract_year_month', 'floor_area_interaction', 
                 'subway_info', 'middle_schools_within_radius', 'contract_type', 
@@ -214,10 +215,7 @@ class MLPDataset(Dataset):
         # feature split
         X_train, y_train, X_valid, y_valid, X_test = common_utils.split_feature_target(train_data_, valid_data_, test_data_)
 
-        X_train.drop(columns=['deposit'], errors='ignore', inplace=True)
-        X_test.drop(columns=['deposit'], errors='ignore', inplace=True)
-        
-        print(X_train.columns, X_test.columns)
+        print(X_train.shape, y_train.shape, X_valid.shape, y_valid.shape, X_test.shape)
         if mode=='train':
             # train + valid
             X_train, y_train = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
@@ -252,8 +250,10 @@ class CombinedDataset(Dataset):
         if self.mode == 'train' or self.mode=='valid':
             X_cnn, y = self.cnn[idx]
             X_mlp, y = self.mlp[idx]
+            print(X_cnn.shape, X_mlp.shape)
             return (X_cnn,X_mlp, y)
         else:
             X_cnn = self.cnn[idx]
             X_mlp = self.mlp[idx]
+            print(X_cnn.shape, X_mlp.shape)
             return (X_cnn, X_mlp)
