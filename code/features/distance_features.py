@@ -131,12 +131,12 @@ def weighted_subway_distance(train_data: pd.DataFrame, valid_data: pd.DataFrame,
         house_coords = np.radians(unique_coords.values)
 
         distances, indices = subway_tree.query(house_coords, k=1)
-        unique_coords['nearest_subway_distance'] = distances.flatten() * 6371000 
+        unique_coords['weighted_subway_distance'] = distances.flatten() * 6371000 
 
         weights = subwayInfo.iloc[indices.flatten()]['weight'].values
 
         # 거리를 가중치로 나누기
-        unique_coords['nearest_subway_distance'] /= weights  
+        unique_coords['weighted_subway_distance'] /= weights  
 
         data = data.merge(unique_coords, on=['latitude', 'longitude'], how='left')
 

@@ -7,7 +7,7 @@ import os
 from sklearn.neighbors import KDTree
 from sklearn.cluster import KMeans
 
-from geopy.distance import great_circle
+#from geopy.distance import great_circle
 
 
 
@@ -66,7 +66,7 @@ def create_clustering_target(train_data: pd.DataFrame, valid_data: pd.DataFrame,
     test_data['cluster'] = test_data['cluster'].astype('category')
 
     # 군집 밀도 변수 추가
-    train_data, valid_data, test_data = create_cluster_density(train_data, valid_data, test_data)
+    #train_data, valid_data, test_data = create_cluster_density(train_data, valid_data, test_data)
 
     centroids = kmeans.cluster_centers_
 
@@ -74,6 +74,30 @@ def create_clustering_target(train_data: pd.DataFrame, valid_data: pd.DataFrame,
     train_data = create_cluster_distance_to_centroid(train_data, centroids)
     valid_data = create_cluster_distance_to_centroid(valid_data, centroids)
     test_data = create_cluster_distance_to_centroid(test_data, centroids)
+
+    # 면적당 전세가 타겟 인코딩
+    train_data['price_per_area'] = train_data['deposit'] / train_data['area_m2']
+    valid_data['price_per_area'] = valid_data['deposit'] / valid_data['area_m2']
+    
+    # 타겟 인코딩 적용 (클러스터별로 평균 면적당 전세가 계산)
+    cluster_target_mean_per_area = train_data.groupby('cluster')['price_per_area'].mean()
+    
+    # 인코딩 값을 각 데이터셋에 추가 (면적당 전세가 기준)
+    train_data['target_encoded_price_per_area'] = train_data['cluster'].map(cluster_target_mean_per_area)
+    valid_data['target_encoded_price_per_area'] = valid_data['cluster'].map(cluster_target_mean_per_area)
+    test_data['target_encoded_price_per_area'] = test_data['cluster'].map(cluster_target_mean_per_area)
+    
+    # 타겟 인코딩 적용 (전세가 기준)
+    cluster_target_mean_deposit = train_data.groupby('cluster')['deposit'].mean()
+    
+    # 인코딩 값을 각 데이터셋에 추가 (전세가 기준)
+    train_data['target_encoded_deposit'] = train_data['cluster'].map(cluster_target_mean_deposit)
+    valid_data['target_encoded_deposit'] = valid_data['cluster'].map(cluster_target_mean_deposit)
+    test_data['target_encoded_deposit'] = test_data['cluster'].map(cluster_target_mean_deposit)
+
+    # 타겟 인코딩 후 price_per_area 변수 제거
+    train_data.drop(columns=['price_per_area'], inplace=True)
+    valid_data.drop(columns=['price_per_area'], inplace=True)
 
     return train_data, valid_data, test_data
 

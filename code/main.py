@@ -38,7 +38,7 @@ def main():
 
     ### 클러스터 피처 apply
     print("clustering apply ...")
-    for info_df_name in ['subway_info', 'school_info', 'park_info']:
+    for info_df_name in ['subway_info']: #'school_info', 'park_info']:
         info_df = getattr(Directory, info_df_name)  
         df = clustering_features.clustering(df, info_df, feat_name=info_df_name, n_clusters=20)
 
