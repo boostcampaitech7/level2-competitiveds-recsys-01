@@ -1,6 +1,11 @@
 <div align='center'>
 
-  # 🏠📊 LV.2 RecSys 프로젝트 : 수도권 아파트 전세가 예측 모델
+ 
+<p align='center'>
+    <img src="https://capsule-render.vercel.app/api?type=waving&color=auto&height=250&section=header&text=Rec%20N%20Roll&fontSize=80&animation=fadeIn&fontAlignY=38&desc=Lv2%20Project&descAlignY=51&descAlign=80"/>
+</p>
+
+# 🏠📊 LV.2 RecSys 프로젝트 : 수도권 아파트 전세가 예측 모델
 
 </div>
 
