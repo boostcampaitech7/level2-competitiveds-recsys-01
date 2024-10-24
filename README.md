@@ -39,6 +39,7 @@
 <img width="800" alt="스크린샷 2024-10-24 오후 2 56 59" src="https://github.com/user-attachments/assets/3d6b4a91-3586-4555-88bf-05fc3f6480e0"></img></div>
 </div>
 ---
+
 ## 🕹️ 프로젝트 실행
 ### 디렉토리 구조
 
