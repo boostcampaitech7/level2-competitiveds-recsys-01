@@ -3,7 +3,7 @@ from sklearn.metrics import mean_absolute_error
 from torch.utils.data import DataLoader
 
 from models.CombinedModel import *
-from handler.datasets import *
+from handler.cnn_mlp_datasets import *
 from utils.common_utils import *
 
 def train(model, train_loader, loss_fn, optimizer, epochs, device, losses):
