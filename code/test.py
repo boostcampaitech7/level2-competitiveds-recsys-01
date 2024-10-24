@@ -12,6 +12,7 @@ from sklearn.metrics import mean_absolute_error
 from models.SeedEnsemble import SeedEnsemble
 import warnings
 warnings.filterwarnings('ignore')
+import json
 
 
 
@@ -37,6 +38,10 @@ def main():
     ### 이상치 처리
     print("start to cleaning outliers...")
     df = preprocessing.handle_age_outliers(df)
+
+    ### 가장 최근 거래가 apply
+    print("add recent rent deposit...")
+    df = add_recent_rent_in_building(df)
 
     ### 데이터 분할
     print("train, valid, test split for preprocessing & feature engineering ...")
@@ -82,6 +87,7 @@ def main():
     
     ### feature select(feature importance 상위 20개)
     selected_columns = [
+        'recent_rent_in_building',
         'distance_km',
         'floor_area_interaction',
         'high_schools_within_radius',

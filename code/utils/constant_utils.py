@@ -77,9 +77,8 @@ class Config:
                        'verbose': 100              
 }
 
-    
 class Directory:
-    root_path = "/data/ephemeral/home/level2-competitiveds-recsys-01/"
+    root_path = "/data/ephemeral/home/jaeeun/level2-competitiveds-recsys-01/"
     train_data = pd.read_csv(os.path.join(root_path, 'data/train.csv'))
     test_data = pd.read_csv(os.path.join(root_path, 'data/test.csv'))
     sample_submission = pd.read_csv(os.path.join(root_path, 'data/sample_submission.csv'))

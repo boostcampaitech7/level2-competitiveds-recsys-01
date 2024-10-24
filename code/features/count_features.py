@@ -3,6 +3,7 @@ from utils.constant_utils import Config, Directory
 import pandas as pd
 import numpy as np
 import os
+from tqdm import tqdm
 
 import tqdm
 from sklearn.neighbors import KDTree
