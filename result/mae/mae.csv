@@ -1,0 +1,39 @@
+﻿name,title,hyperparams,MAE score
+eun,"gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4519.541620020683
+eun,"numeric_gangnam, xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4352.9795987971465
+eun,"numeric_gangnam, age_outlier, xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4406.7306427889125
+eun,"age_outlier, xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4470.387091093822
+eun,"age_outlier, lgb",random_state=Config.RANDOM_SEED,6110.661622027269
+eun,"age_outlier, square_area, xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4491.7308464194775
+eun,"age_outlier, without standardization, xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4472.349465730088
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",3774.436010433846
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",3774.436010433846
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",3774.436010433846
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",3774.436010433846
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",3774.436010433846
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",3749.922278966041
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",3767.9765010285264
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",3779.302815090248
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",3774.198315558008
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4485.702442438513
+jinnk0,"cluster,timefeature,categorical,drop,gangnam,xgb1000","learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4705.191740678576
+jinnk0,weight_matrix_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4223.482207298764
+jinnk0,weight_matrix_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4223.482207298764
+jinnk0,weight_matrix_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4449.1319788839855
+jinnk0,weight_matrix_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4424.968174440804
+jinnk0,weight_matrix_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4424.968174440804
+jinnk0,weight_matrix_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4424.968174440804
+jinnk0,weight_matrix_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4424.968174440804
+jinnk0,weight_matrix_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4424.968174440804
+jinnk0,weight_matrix(k=5)_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4424.968174440804
+jinnk0,weight_matrix(k=5)_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4424.968174440804
+jinnk0,weight_matrix(k=5)_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4424.968174440804
+jinnk0,weight_matrix(k=10)_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4394.389635942692
+jinnk0,modified_weight_matrix(k=10)_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4459.757009048964
+jinnk0,modified_weight_matrix(k=10)_and_xgboost_test,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4369.690896537786
+jinnk0,modified_weight_matrix(k=10)_and_xgboost_test_and_optuna,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4246.817145473464
+jinnk0,modified_weight_matrix(k=10)_and_xgboost_test_and_optuna,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4246.817145473464
+jinnk0,modified_weight_matrix(k=10)_and_xgboost_test_and_optuna,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4246.817145473464
+eun,receent_deposit+modified_weight_matrix(k=10)_and_xgboost_test_and_optuna,"""learning_rate"": 0.12243929663868629,""n_estimators"": 648,""max_depth"": 10,""min_child_weight"": 2,""gamma"": 0.11673592777053933,""subsample"": 0.999075058215622,""colsample_bytree"": 0.8848954245105137,""enable_categorical"": true",4008.165339617047
+eun,modified_weight_matrix(k=10)_and_xgboost_test_and_optuna,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4172.369782774025
+eun,seed_ensemble_weight_matrix(k=10)_and_xgboost_test_and_optuna,"learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED",4168.387229348927

@@ -79,7 +79,7 @@ hyperparams : 하이퍼파라미터 구성
 MAE score : MAE score
 '''
 def mae_to_csv(name, title, hyperparams, mae):
-    mae_path = os.path.join(Directory.result_path, "mae.csv")
+    mae_path = os.path.join(Directory.result_path + '/mae', "mae.csv")
     new_dict = {"name":[name], "title": [title], "hyperparams":[hyperparams], "MAE score":[mae]}
 
     if not os.path.exists(mae_path):
