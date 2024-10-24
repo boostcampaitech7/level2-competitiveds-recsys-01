@@ -35,6 +35,56 @@ Private, Public Leader Board **2위**
 | 협업 환경 | `Notion`(진행 상황 공유), `Github`(코드 및 데이터 공유), `Slack` , `카카오톡`(실시간 소통) |
 
 
+### 데이터셋 구성
+>- `train.csv` : 기본적인 컬럼
+
+| 컬럼명 | 설명 |
+| --- | --- |
+|`index`|인덱스 번호|
+|`area_m2`|면적(제곱미터)|
+|`contract_year_month`|계약년월|
+|`contract_day`|계약일|
+|`contract_type`|계약 유형(0: 신규, 1:갱신, 2:모름)|
+|`floor`|층수|
+|`built_year`|건축연도|
+|`latitude`|위도|
+|`longitude`|경도|
+|`age`|건물의 나이(contract_year_month - built_year)|
+
+>- `subwayInfo.csv` : 지하철역 위치 정보
+
+| 컬럼명 | 설명 |
+| --- | --- |
+|`latitude`|위도|
+|`longitude`|경도|
+
+>- `interestRate.csv` : 금리 정보
+
+| 컬럼명 | 설명 |
+| --- | --- |
+|`year_month`|연월|
+|`interest_rate`|금리|
+
+>- `schoolInfo.csv` : 학교 정보
+
+| 컬럼명 | 설명 |
+| --- | --- |
+|`schoolLevel`|초등학교, 중학교, 고등학교 여부|
+|`latitude`|위도|
+|`longitude`|경도|
+
+>- `parkInfo.csv` : 공원 정보
+
+| 컬럼명 | 설명 |
+| --- | --- |
+|`latitude`|위도|
+|`longitude`|경도|
+|`area`|면적|
+
+ >- [Featuring Engineering을 통해 추가된 파생 지표](https://github.com/boostcampaitech7/level2-competitiveds-recsys-01/blob/main/code/features/README.md)
+
+---
+
 ### 타임라인
 
 <div align='center'>
