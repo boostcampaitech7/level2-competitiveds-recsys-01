@@ -1,7 +1,12 @@
 {
     "model": {
       "type": "XGBoost",
-      "hyperparameters": {
+      "hyperparameters_basic": {
+        "learning_rate": 0.3,
+        "n_estimators": 1000,
+        "enable_categorical": true
+      },
+      "hyperparameters_optuna": {
         "learning_rate": 0.12243929663868629,
         "n_estimators": 648,
         "max_depth": 10,

@@ -1,18 +1,18 @@
 from utils.constant_utils import Directory
 from utils import common_utils
 
-import preprocessing
+from preprocessing import preprocessing
 from features.clustering_features import *
 from features.count_features import *
 from features.distance_features import *
 from features.other_features import *
-
-from tqdm import tqdm
-
-import model
-from inference import *
+from models.SpatialWeightMatrix import SpatialWeightMatrix
+from models.XGBoostWithSpatialWeight import XGBoostWithSpatialWeight
+from sklearn.metrics import mean_absolute_error
+from models.SeedEnsemble import SeedEnsemble
 import warnings
 warnings.filterwarnings('ignore')
+
 
 
 def main():
@@ -22,8 +22,8 @@ def main():
     name : 실험자 이름입니다.
     title : result 폴더에 저장될 실험명을 지정합니다.
     '''
-    name = 'jinnk0'
-    title = 'cluster,timefeature,categorical,drop,gangnam,xgb1000'
+    name = 'eun'
+    title = 'final_seed(10)_ensemble_weight_matrix(k=10)_and_xgboost_test_and_optuna'
 
     print("total data load ...")
     df = common_utils.merge_data(Directory.train_data, Directory.test_data)
@@ -100,44 +100,75 @@ def main():
     train_data_ = preprocessing.drop_columns(train_data, ['contract_day'])
     valid_data_ = preprocessing.drop_columns(valid_data, ['contract_day'])
     test_data_ = preprocessing.drop_columns(test_data, ['contract_day'])
+    
+    ### feature select(feature importance 상위 20개)
+    selected_columns = [
+        'distance_km',
+        'floor_area_interaction',
+        'high_schools_within_radius',
+        'subways_within_radius',
+        'built_year',
+        'subway_info',
+        'longitude',
+        'nearest_subway_distance_x',
+        'area_m2',
+        'middle_schools_within_radius',
+        'schools_within_radius',
+        'nearest_subway_distance_y',
+        'cluster',
+        'contract_type',
+        'distance_to_centroid',
+        'distance_category',
+        'contract_year_month',
+        'latitude',
+        'nearest_park_area_sum',
+        'elementary_schools_within_radius',
+        'deposit'
+    ]
+    train_data_ = train_data[selected_columns]
+    valid_data_ = valid_data[selected_columns]
+    test_data_ = test_data[selected_columns]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 # 여기 아래서부터 자유롭게 시도(drop columns를 제외하면 대략 52개 column정도 있음)   
-    
+
     ### 정규화
     print("standardization...")
-    train_data_, valid_data_, test_data_ = preprocessing.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')
+    train_data, valid_data, test_data = preprocessing.standardization(train_data_, valid_data_, test_data_, scaling_type = 'standard')
 
-    # feature selection
-    train_data_scaled, valid_data_scaled, test_data_scaled = preprocessing.feature_selection(train_data_, valid_data_, test_data_)
-
-    # feature split
-    X_train, y_train, X_valid, y_valid, X_test = common_utils.split_feature_target(train_data_scaled, valid_data_scaled, test_data_scaled)
-    
     # train model
     print("Training the model...")
-    model_ = model.xgboost(X_train, y_train)
 
-    prediction, mae = inference(model_, 'validation', X_valid, y_valid)
+    # 가중치 행렬 생성
+    spatial_weight_matrix = SpatialWeightMatrix()
+    spatial_weight_matrix.generate_weight_matrices(train_data, train_data, dataset_type='train')
+    spatial_weight_matrix.generate_weight_matrices(valid_data, train_data, dataset_type='valid')
 
-    # record MAE score as csv
-    hyperparams = "learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED"
-    common_utils.mae_to_csv(name, title, hyperparams=hyperparams, mae = mae)
+    seed_ensemble = SeedEnsemble(model_class=XGBoostWithSpatialWeight, spatial_weight_matrix=spatial_weight_matrix)
+    seed_ensemble.train(train_data, dataset_type='train')
+    
+    final_test_preds = seed_ensemble.evaluate(valid_data, train_data)
+    mae = mean_absolute_error(valid_data['deposit'], final_test_preds)
+    print(f"total MAE on validation data: {mae}")
 
     # train with total dataset
     print("Training with total dataset...")
-    X_total, y_total = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
-    model_ = model.xgboost(X_total, y_total)
+    total_train_data = pd.concat([train_data, valid_data])
+    spatial_weight_matrix.generate_weight_matrices(total_train_data, total_train_data, dataset_type='train_total')
+    spatial_weight_matrix.generate_weight_matrices(test_data, total_train_data, dataset_type='test')
 
-    # inference with test data
-    submission = inference(model_, 'submission', X_test)
+    seed_ensemble = SeedEnsemble(model_class=XGBoostWithSpatialWeight, spatial_weight_matrix=spatial_weight_matrix)
+    seed_ensemble.train(total_train_data, dataset_type='train_total')
+    final_test_preds = seed_ensemble.inference(test_data, total_train_data)
+
+    sample_submission = Directory.sample_submission
+    sample_submission['deposit'] = final_test_preds
 
     # save sample submission
-    common_utils.submission_to_csv(submission, 'test_all_columns+xgboost')
+    common_utils.submission_to_csv(sample_submission, title)
 
     print("Successfully executed main.py.")
-    return prediction, mae
 
 if __name__ == "__main__":
-    prediction, mae = main()
-    print(mae)
+    main()
+

@@ -10,10 +10,10 @@ from utils.constant_utils import Directory
 class XGBoostWithSpatialWeight:
 
     def __init__(self, spatial_weight_matrix, seed):
-        path = Directory.root_path + 'code/models/config_optuna.json'
+        path = Directory.root_path + 'code/config/config.json'
         with open(path, 'r') as file:
             config = json.load(file)
-        hyperparams = config['model']['hyperparameters']  
+        hyperparams = config['model']['hyperparameters_optuna']  
         self.seed = seed
         self.spatial_weight_matrix = spatial_weight_matrix
         self.spatial_model = xgb.XGBRegressor(**hyperparams, random_state=self.seed)
