@@ -38,10 +38,59 @@
 📅 2024.10.01 ~ 2024.10.24 <br>
 <img width="800" alt="스크린샷 2024-10-24 오후 2 56 59" src="https://github.com/user-attachments/assets/3d6b4a91-3586-4555-88bf-05fc3f6480e0"></img></div>
 </div>
-
 ---
 ## 🕹️ 프로젝트 실행
 ### 디렉토리 구조
+
+```
+📦 level2-competitiveds-recsys-01
+├── 📁code
+│   ├── cnn_mlp.py
+│   ├── tabtrasformer_main.py
+│   ├── main.py
+│   ├── 📁features
+│   │   ├── README.md
+│   │   ├── clustering_features.py
+│   │   ├── count_features.py
+│   │   ├── deposit_features.py
+│   │   ├── distance_features.py
+│   │   └── other_features.py
+│   ├── 📁handler
+│   │   ├── cnn_mlp_datasets.py
+│   │   ├── feature_engineering.py
+│   │   └── preprocessing.py
+│   ├── 📁models
+│   │   ├── 📁DL_tabtransformer
+│   │   │   ├── dataset.py
+│   │   │   ├── tabtransformer.py
+│   │   │   └── trainer.py
+│   │   ├── CombinedModel.py
+│   │   ├── SeedEnsemble.py
+│   │   ├── SpatialWeightMatrix.py
+│   │   ├── XGBoostWithSpatialWeight.py
+│   │   ├── inference.py
+│   │   └── model.py
+│   └── 📁utils
+│       ├── common_utils.py
+│       └── constant_utils.py
+├── 📁data
+│   ├── interestRate.csv
+│   ├── parkInfo.csv
+│   ├── sample_submission.csv
+│   ├── schoolinfo.csv
+│   ├── subwayInfo.csv
+│   ├── test.csv
+│   ├── train.csv
+│   └── 📁transaction_data
+│       ├── test_transaction_3.txt
+│       ├── train_transaction_3.txt
+│       └── valid_transaction_3.txt
+└── 📁result
+│   ├── mae
+│   ├── submission
+├── README.md
+└── requirements.txt
+```
 
 ### Installation with pip
 1. `pip install -r requirements.txt` 실행
