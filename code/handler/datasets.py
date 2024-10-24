@@ -1,20 +1,22 @@
 from torch.utils.data import Dataset
 from utils.constant_utils import Directory
 from utils import common_utils
-
-import preprocessing
+from handler import preprocessing
 from features.clustering_features import *
 from features.count_features import *
 from features.distance_features import *
 from features.other_features import *
 
 from tqdm import tqdm
+import warnings
+warnings.filterwarnings('ignore')
+
 import torch
 from torch import nn
 import torch.optim as optim
 
 from models.CombinedModel import *
-from inference import *
+from models.inference import *
 
 def create_embedding(train_data: pd.DataFrame, valid_data: pd.DataFrame, test_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     total_df = pd.concat([train_data, valid_data, test_data], axis=0)
@@ -77,7 +79,6 @@ class GridDataset(Dataset):
         train_data_ = preprocessing.handle_duplicates(train_data_)
         valid_data_ = preprocessing.handle_duplicates(valid_data_)
         
-        train_data_ = pd.concat([train_data_, valid_data_], axis=0)
 
         train_data_.reset_index(drop=True, inplace=True)
         valid_data_.reset_index(drop=True, inplace=True)
@@ -89,7 +90,6 @@ class GridDataset(Dataset):
             # train + valid
             X = torch.stack([grid]*len(train_data_))
             y = torch.tensor(train_data_['deposit'].values)
-            print(f"X.shape: {X.shape}, train_data_ length: {len(train_data_)}")
     
             for i, data in tqdm(train_data_.iterrows()):
                 # 아파트 위치의 bin이 1부터 시작해서 -1 해준다.
@@ -215,16 +215,15 @@ class MLPDataset(Dataset):
         # feature split
         X_train, y_train, X_valid, y_valid, X_test = common_utils.split_feature_target(train_data_, valid_data_, test_data_)
 
-        print(X_train.shape, y_train.shape, X_valid.shape, y_valid.shape, X_test.shape)
         if mode=='train':
             # train + valid
-            X_train, y_train = common_utils.train_valid_concat(X_train, X_valid, y_train, y_valid)
-            X_train.reset_index(inplace=True)
             self.X = torch.tensor(X_train.values, dtype=torch.float32).unsqueeze(1)
             self.y = torch.tensor(y_train.values, dtype=torch.float32).unsqueeze(1)
+
         elif mode=='valid':
             self.X = torch.tensor(X_valid.values, dtype=torch.float32).unsqueeze(1)
             self.y = torch.tensor(y_valid.values, dtype=torch.float32).unsqueeze(1)
+
         else:
             self.X = torch.tensor(X_test.values, dtype=torch.float32).unsqueeze(1)
     
@@ -250,10 +249,8 @@ class CombinedDataset(Dataset):
         if self.mode == 'train' or self.mode=='valid':
             X_cnn, y = self.cnn[idx]
             X_mlp, y = self.mlp[idx]
-            print(X_cnn.shape, X_mlp.shape)
             return (X_cnn,X_mlp, y)
         else:
             X_cnn = self.cnn[idx]
             X_mlp = self.mlp[idx]
-            print(X_cnn.shape, X_mlp.shape)
             return (X_cnn, X_mlp)

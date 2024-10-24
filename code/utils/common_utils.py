@@ -53,18 +53,15 @@ def split_feature_target(train_data_scaled, valid_data_scaled, test_data_scaled)
     y_train = train_data_scaled['deposit']
     X_valid = valid_data_scaled.drop(columns=['deposit'])
     y_valid = valid_data_scaled['deposit']
-    X_test = test_data_scaled.copy()
+    X_test = test_data_scaled.drop(columns=['deposit'], errors='ignore')
     
     return X_train, y_train, X_valid, y_valid, X_test
 
 
 # train과 valid 병합 함수(total dataset 구축)
 def train_valid_concat(X_train, X_valid, y_train, y_valid):
-    X_total, y_total = pd.concat([X_train, X_valid]), pd.concat([y_train, y_valid])
+    X_total, y_total = pd.concat([X_train, X_valid], axis=0), pd.concat([y_train, y_valid], axis=0)
     return X_total, y_total
-
-
-
 
 
 # submission 저장 함수
@@ -76,6 +73,7 @@ def submission_to_csv(submit_df, file_name):
 
     submission_file_path = os.path.join(submission_path, file_name)
     submit_df.to_csv(submission_file_path, index=False, encoding='utf-8-sig')
+
 
 '''
 name : 실험 진행자
@@ -96,7 +94,6 @@ def mae_to_csv(name, title, hyperparams, mae):
 
     mae_df.to_csv(mae_path, index=False, encoding='utf-8-sig')
 
-    
     
 # saving data and load function
 def save_and_load_function(data: list, file_name: str, mode: str) -> list:

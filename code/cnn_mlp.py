@@ -1,8 +1,10 @@
-from utils.datasets import *
 from tqdm import tqdm
 from sklearn.metrics import mean_absolute_error
-from models.CombinedModel import *
 from torch.utils.data import DataLoader
+
+from models.CombinedModel import *
+from handler.datasets import *
+from utils.common_utils import *
 
 def train(model, train_loader, loss_fn, optimizer, epochs, device, losses):
     # train 모드로 설정
@@ -12,7 +14,6 @@ def train(model, train_loader, loss_fn, optimizer, epochs, device, losses):
         epoch_loss = 0.0
         for batch in tqdm(train_loader):
             X_cnn,X_mlp, y = batch
-            #print(X_cnn, X_mlp, y)
             X_cnn, X_mlp, y = X_cnn.to(device), X_mlp.to(device), y.to(device)
 
             optimizer.zero_grad()
@@ -60,7 +61,6 @@ def inference_test(model, test_loader, device) -> np.ndarray:
         for batch in tqdm(test_loader):
             X_cnn, X_mlp = batch
             X_cnn, X_mlp = X_cnn.to(device), X_mlp.to(device)
-            #print(X_cnn, X_mlp)
             y_pred = model(X_cnn, X_mlp)
             all_preds.append(y_pred.cpu().numpy().reshape(-1,1))
             
@@ -71,11 +71,11 @@ def inference_test(model, test_loader, device) -> np.ndarray:
 if __name__=='__main__':
     # valid MAE 따로 구하고 싶은 경우 주석 해제
     train_set = CombinedDataset(mode='train')
-    #valid_set = CombinedDataset(mode='valid')
+    valid_set = CombinedDataset(mode='valid')
     test_set = CombinedDataset(mode='test')
 
     train_loader = DataLoader(dataset=train_set, batch_size = 64, shuffle=False)
-    #valid_loader = DataLoader(dataset=valid_set, batch_size=64, shuffle=False)
+    valid_loader = DataLoader(dataset=valid_set, batch_size=64, shuffle=False)
     test_loader = DataLoader(dataset=test_set, batch_size=64, shuffle=False)
 
     mlp_input = len(train_set.mlp[0][0][0])
@@ -91,9 +91,11 @@ if __name__=='__main__':
         loss_fn = criterion, optimizer = optimizer, epochs = epochs, 
         device = device, losses = losses)
     
+    ### validation
+    validate(model = model, valid_loader = valid_loader,device = device)
+
     ### inference with test set
-    exp_title = 'CNN+MLPv3'
+    exp_title = 'CNN+MLPv4'
     submission = inference_test(model=model, test_loader=test_loader, device=device)
     submission = pd.DataFrame(submission)
     submission_to_csv(submission, exp_title)
-    torch.save(model.state_dict(), f'pth/{exp_title}.pth')

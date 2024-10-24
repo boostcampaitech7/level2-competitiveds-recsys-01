@@ -8,7 +8,6 @@ class Config:
     CATEGORICAL_COLUMNS = ['contract_type']
     NUMERICAL_COLUMNS = ['area_m2','contract_year_month','contract_day','floor','built_year','latitude','longitude','age','deposit']
 
-    
 class Directory:
     root_path = "/data/ephemeral/home/jaeeun/level2-competitiveds-recsys-01/"
     train_data = pd.read_csv(os.path.join(root_path, 'data/train.csv'))
