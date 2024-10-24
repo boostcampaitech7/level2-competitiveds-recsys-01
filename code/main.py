@@ -1,8 +1,4 @@
 import pandas as pd
-import numpy as np
-import os
-import sys
-from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -15,8 +11,8 @@ from models.SpatialWeightMatrix import SpatialWeightMatrix
 from models.XGBoostWithSpatialWeight import XGBoostWithSpatialWeight
 import models.SeedEnsemble as se
 
-from Handler import feature_engineering as fe
-from Handler import preprocessing as pre
+from handler import feature_engineering as fe
+from handler import preprocessing as pre
 
 from models.inference import *
 
