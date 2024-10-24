@@ -1,13 +1,8 @@
-import os
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import LabelEncoder, StandardScaler, PowerTransformer
-from sklearn.cluster import KMeans
-
-from utils.constant_utils import Config
-
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler, PowerTransformer
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
 ### 변수 유형별 변환
