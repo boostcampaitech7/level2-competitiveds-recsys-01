@@ -1,24 +1,28 @@
 import numpy as np
 import lightgbm as lgb
 import xgboost as xgb
+import catboost as cb
 from utils.constant_utils import Config
 import optuna
 from sklearn.metrics import mean_absolute_error
 from utils import common_utils
 from sklearn.model_selection import KFold
-from xgboost import XGBRegressor
-from lightgbm import LGBMRegressor
 from sklearn.linear_model import LinearRegression
 
-def lightgbm(X, y):
+def lightgbm(X, y, fitting : bool = True):
     lgb_model = lgb.LGBMRegressor(random_state=Config.RANDOM_SEED)
+    if not fitting:
+        return lgb_model
+    
     lgb_model.fit(X, y)
     return lgb_model
 
-# def catboost(X, y):
-#     lgb_model = lgb.LGBMRegressor(random_state=Config.RANDOM_SEED)
-#     lgb_model.fit(X, y)
-#     return lgb_model
+def catboost(X, y, fitting : bool = True):
+    cb_model = cb.CatBoostRegressor(**Config.CATBOOST_PARAMS)
+    if not fitting:
+        return cb_model
+    cb_model.fit(X,y)
+    return cb_model
 
 def xgboost(X_train, y_train, X_valid, y_valid, optimize=False):
     
@@ -56,7 +60,7 @@ def xgboost(X_train, y_train, X_valid, y_valid, optimize=False):
     
     else:
         print("default parameters...")
-        xgb_model = xgb.XGBRegressor(learning_rate=0.3, n_estimators=1000, enable_categorical=True, random_state=Config.RANDOM_SEED)
+        xgb_model = xgb.XGBRegressor(**Config.XGBOOST_PARAMS)
     
     xgb_model.fit(X_train, y_train)
     
@@ -95,9 +99,9 @@ def objective(trial, model_name, X_selected, y):
         y_train, y_valid = y.iloc[train_idx], y.iloc[valid_idx]
 
         if model_name.startswith('lgb'):
-            model = LGBMRegressor(**params)
+            model = lgb.LGBMRegressor(**params)
         elif model_name == 'xgboost':
-            model = XGBRegressor(**params, random_state=Config.RANDOM_SEED, enable_categorical=True)
+            model = xgb.XGBRegressor(**params, random_state=Config.RANDOM_SEED, enable_categorical=True)
 
         model.fit(x_train, y_train)
         oof_predictions[valid_idx] = model.predict(x_valid)
@@ -132,9 +136,9 @@ def optimize_and_predict(X_selected, y, test_data_selected, models, saved_best_p
             y_train, y_valid = y.iloc[train_idx], y.iloc[valid_idx]
 
             if model_name.startswith('lgb'):
-                model = LGBMRegressor(**best_params)
+                model = lgb.LGBMRegressor(**best_params)
             elif model_name == 'xgboost':
-                model = XGBRegressor(**best_params, random_state=Config.RANDOM_SEED, enable_categorical=True)
+                model = xgb.XGBRegressor(**best_params, random_state=Config.RANDOM_SEED, enable_categorical=True)
 
             model.fit(x_train, y_train)
             oof_preds[valid_idx] = model.predict(x_valid)
