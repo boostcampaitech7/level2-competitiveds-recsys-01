@@ -31,9 +31,8 @@ feature/
 | function   | feature name    | description       |
 |------------|----------|-------------------------|
 | transaction_count_function | transaction_count_last_{months}_months | n 개월 동일한 아파트 거래량(default = 3)  |
-| create_subway_within_radius | park_info | park의 위경도 기준으로 clustering     |
-| create_school_within_radius | school_info | 학교의 위경도 기준으로 clustering     |
-| create_school_within_radius | school_info | 학교의 위경도 기준으로 clustering     |
+| create_subway_within_radius | subways_within_radius | 반경 내 지하철 개수(default = 0.01km)    |
+| create_school_within_radius | schools_within_radius | 반경 내 학교 개수(default = 0.01km)   |
 | create_school_counts_within_radius_by_school_level | school_info | 학교의 위경도 기준으로 clustering     |
 | create_place_within_radius | school_info | 학교의 위경도 기준으로 clustering     |
 
