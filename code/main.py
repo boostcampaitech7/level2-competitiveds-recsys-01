@@ -151,6 +151,10 @@ def main():
     mae = mean_absolute_error(valid_data['deposit'], final_test_preds)
     print(f"total MAE on validation data: {mae}")
 
+    # record MAE score as csv
+    hyperparams = 'config.json, XGBoost, hyperparameters_optuna'
+    common_utils.mae_to_csv(name, title, hyperparams=hyperparams, mae = mae)
+
     # train with total dataset
     print("Training with total dataset...")
     total_train_data = pd.concat([train_data, valid_data])
