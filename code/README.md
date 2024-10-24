@@ -1,6 +1,7 @@
-# Feature Engineering Directory
+# Features Engineering Directory
 
-This directory contains all the feature engineering scripts used in our project. Each script is responsible for creating a specific set of features, which are listed and explained below.
+해당 디렉토리(Features)는 우리 프로젝트에서 사용된 모든 피처 엔지니어링 스크립트를 포함하고 있습니다.  
+각 스크립트는 특정한 피처 세트를 생성하는 역할을 하며 아래에 나열된 설명이 있습니다.
 
 ## Directory Structure
 
@@ -18,32 +19,23 @@ feature/
 
 **clustering_features.py**
 | function   | feature name    | description       |
+|------------|-------------------|-------------------------|
+| clustering | subway_info | subway의 위경도 기준으로 k=20 clustering  |
+| clustering | park_info | park의 위경도 기준으로 k=20 clustering     |
+| clustering | school_info | 학교의 위경도 기준으로 k=20 clustering     |
+|create_clustering_target| cluster | target을 기준으로 k=20 clustering |
+|create_clustering_target| distance_to_centroid | 군집 내 centroid와의 거리 |
+|create_cluster_deposit_median| cluster_median | target 기준의 cluster 중앙 전세값 |
+
+**count_features.py**
+| function   | feature name    | description       |
 |------------|----------|-------------------------|
-| clustering | subway_info | subway의 위경도 기준으로 clustering  |
-| clustering | park_info | park의 위경도 기준으로 clustering     |
-| clustering | school_info | 학교의 위경도 기준으로 clustering     |
-
-
-Feature Name	Description
-cluster_id	Assigns each user to a cluster based on transaction patterns
-cluster_avg_spent	Average spending within each cluster
-cluster_freq	Frequency of transactions per cluster
-count_features.py
-Feature Name	Description
-txn_count	Total number of transactions by a user
-txn_count_last_30	Number of transactions in the last 30 days
-txn_count_large	Number of transactions above a certain threshold
-deposit_features.py
-Feature Name	Description
-total_deposit	Total deposit amount over a given time period
-avg_deposit	Average deposit amount per transaction
-deposit_freq	Frequency of deposit transactions
-distance_features.py
-Feature Name	Description
-avg_distance	Average geographical distance between transaction locations
-max_distance	Maximum distance observed between transaction locations
-distance_from_home	Distance of transactions from user's registered address
-
+| transaction_count_function | transaction_count_last_{months}_months | n 개월 동일한 아파트 거래량(default = 3)  |
+| create_subway_within_radius | park_info | park의 위경도 기준으로 clustering     |
+| create_school_within_radius | school_info | 학교의 위경도 기준으로 clustering     |
+| create_school_within_radius | school_info | 학교의 위경도 기준으로 clustering     |
+| create_school_counts_within_radius_by_school_level | school_info | 학교의 위경도 기준으로 clustering     |
+| create_place_within_radius | school_info | 학교의 위경도 기준으로 clustering     |
 
 
 
