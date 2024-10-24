@@ -25,6 +25,8 @@ feature/
 | clustering | school_info | 학교의 위경도 기준으로 k=20 clustering     |
 |create_clustering_target| cluster | target을 기준으로 k=20 clustering |
 |create_clustering_target| distance_to_centroid | 군집 내 centroid와의 거리 |
+|create_clustering_target| target_encoded_price_per_area | 클러스터별 평균 면적당 전세가 |
+|create_clustering_target| target_encoded_deposit | 클러스터 타겟 인코딩 |
 |create_cluster_deposit_median| cluster_median | target 기준의 cluster 중앙 전세값 |
 
 **count_features.py**
